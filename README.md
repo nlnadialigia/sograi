@@ -31,17 +31,40 @@ Você pode executar a **SogrAI** de duas formas simples:
 
 ### Opção A: Via Docker Compose (Recomendado para Produção e Testes Rápidos)
 
-Com apenas um comando, o Docker Compose inicializa o banco PostgreSQL, compila o backend NestJS e disponibiliza o frontend com proxy reverso Nginx na porta `3000`:
+Com apenas um comando, o Docker Compose inicializa o banco PostgreSQL (v18), compila o backend NestJS e disponibiliza o frontend com proxy reverso Nginx na porta `3000`:
 
 ```bash
-# 1. Copie e configure as variáveis de ambiente
+# 1. Copie e configure as variáveis de ambiente (especialmente GEMINI_API_KEY)
 cp .env.example .env
 
-# 2. Suba todos os containers
+# 2. Suba todos os containers em segundo plano
 docker compose up -d --build
 ```
 
 Acesse a interface no navegador: **`http://localhost:3000`**
+
+---
+
+### 🐳 Comandos Úteis do Docker
+
+Aqui estão os comandos mais utilizados no dia a dia para gerenciar a aplicação via Docker:
+
+| Ação | Comando |
+| :--- | :--- |
+| **Subir serviços em segundo plano** | `docker compose up -d` |
+| **Reconstruir e subir imagens após alterações** | `docker compose up -d --build` |
+| **Acompanhar logs de todos os containers** | `docker compose logs -f` |
+| **Acompanhar logs de um serviço específico** | `docker compose logs -f backend` *(ou `frontend`, `postgres`)* |
+| **Verificar status e saúde dos containers** | `docker compose ps` |
+| **Parar todos os containers** | `docker compose stop` |
+| **Derrubar containers mantendo os dados do banco** | `docker compose down` |
+| **Derrubar containers apagando os volumes (reset do banco)** | `docker compose down -v` |
+| **Acessar o terminal do container do backend** | `docker compose exec backend sh` |
+| **Acessar o PostgreSQL via CLI (psql)** | `docker compose exec postgres psql -U sograi -d sograi_db` |
+| **Rodar migrações/push do Prisma dentro do container** | `docker compose exec backend pnpm prisma db push` |
+
+> [!TIP]
+> Caso você já possua um PostgreSQL instalado nativamente no seu computador rodando na porta padrão `5432`, a porta mapeada pelo Docker para o banco está configurada para **`5433`** no host, evitando conflitos de porta (`address already in use`).
 
 ---
 

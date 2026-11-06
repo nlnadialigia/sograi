@@ -51,15 +51,23 @@ export default function App() {
   })
 
   useEffect(() => {
-    fetch("/api/health")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          setServicesStatus({ postgres: !!data.postgres, gemini: !!data.gemini })
-        }
-      })
-      .catch(() => {})
+    const checkHealth = () => {
+      fetch("/api/health")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setServicesStatus({ postgres: !!data.postgres, gemini: !!data.gemini })
+          }
+        })
+        .catch(() => {})
+    }
 
+    checkHealth()
+    const interval = setInterval(checkHealth, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
     fetch("/api/reviews")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
