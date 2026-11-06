@@ -3,6 +3,7 @@ import { ReviewsController } from './reviews.controller';
 import { PendingItemsController } from './pending-items.controller';
 import { ReviewsService } from './reviews.service';
 import { ReportGeneratorService } from './report-generator.service';
+import { AnalysisQueueService } from './analysis-queue.service';
 import { AgentsModule } from '../agents/agents.module';
 import { GeminiModule } from '../gemini/gemini.module';
 import { AzureDevOpsModule } from '../azure-devops/azure-devops.module';
@@ -12,7 +13,7 @@ import { GitHubModule } from '../github/github.module';
   imports: [AgentsModule, GeminiModule, AzureDevOpsModule, GitHubModule],
 
   controllers: [ReviewsController, PendingItemsController],
-  providers: [ReviewsService, ReportGeneratorService],
-  exports: [ReviewsService, ReportGeneratorService],
+  providers: [ReviewsService, ReportGeneratorService, AnalysisQueueService],
+  exports: [ReviewsService, ReportGeneratorService, AnalysisQueueService],
 })
 export class ReviewsModule {}

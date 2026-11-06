@@ -1,20 +1,31 @@
 import { Controller, Post, Get, Patch, Delete, Body, Param, ParseIntPipe, Res, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { ReviewsService } from './reviews.service';
+import { AnalysisQueueService } from './analysis-queue.service';
 import { AnalyzePrDto } from './dto/analyze-pr.dto';
 
 @Controller('api')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly queueService: AnalysisQueueService
+  ) {}
 
   @Get('health')
   async getHealth() {
     return this.reviewsService.getHealthStatus();
   }
 
+  @Get('reviews/queue-status')
+  async getQueueStatus() {
+    return this.queueService.getStatus();
+  }
+
   @Post('reviews/analyze')
   async analyze(@Body() dto: AnalyzePrDto) {
-    return this.reviewsService.analyzePullRequest(dto);
+    return this.queueService.enqueue(dto.prUrl, () =>
+      this.reviewsService.analyzePullRequest(dto)
+    );
   }
 
   @Post('reviews/analyze-stream')
@@ -29,10 +40,21 @@ export class ReviewsController {
     };
 
     try {
-      const result = await this.reviewsService.analyzePullRequest(
-        dto,
-        (stepText, percent, meta) => {
-          sendEvent('progress', { step: stepText, percent, meta });
+      const result = await this.queueService.enqueue(
+        dto.prUrl,
+        () =>
+          this.reviewsService.analyzePullRequest(
+            dto,
+            (stepText, percent, meta) => {
+              sendEvent('progress', { step: stepText, percent, meta });
+            }
+          ),
+        (position, total) => {
+          sendEvent('progress', {
+            step: `Aguardando liberação na fila de execução (posição ${position} de ${total})...`,
+            percent: 0,
+            meta: { queued: true, position, total },
+          });
         }
       );
       sendEvent('done', result);
@@ -60,6 +82,14 @@ export class ReviewsController {
   @Patch('reviews/:id/archive')
   async toggleArchive(@Param('id', ParseIntPipe) id: number) {
     return this.reviewsService.toggleArchive(id);
+  }
+
+  @Patch('tracking-items/:id/resolve')
+  async resolveTrackingItem(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { notes?: string }
+  ) {
+    return this.reviewsService.resolveTrackingItem(id, body?.notes);
   }
 
   @Delete('reviews/:id')

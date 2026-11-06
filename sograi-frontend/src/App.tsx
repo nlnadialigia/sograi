@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react"
 import { Page, Review, Theme, UserProfile, ServicesStatus, ReviewStatus, Risk } from "./types"
-import { reviewsSeed } from "./data/constants"
+import { reviewsSeed, pageTitles, pageSubtitles } from "./data/constants"
 import { Sidebar } from "./components/layout/Sidebar"
 import { Topbar } from "./components/layout/Topbar"
 import { WelcomeScreen } from "./components/layout/WelcomeScreen"
 import { NewAnalysis } from "./components/reviews/NewAnalysis"
+import { LastAnalysisPage } from "./components/reviews/LastAnalysisPage"
 import { HistoryPage } from "./components/reviews/HistoryPage"
 import { DetailPage } from "./components/reviews/DetailPage"
 import { ReviewsTable } from "./components/reviews/ReviewsTable"
 import { PendingPage } from "./components/reviews/PendingPage"
 import { AdminPage } from "./components/admin/AdminPage"
 import { GuidesPage } from "./components/guides/GuidesPage"
+import { useAnalysisRunner } from "./hooks/useAnalysisRunner"
 
 
 export default function App() {
@@ -36,15 +38,18 @@ export default function App() {
   const pageRef = useRef<Page>(page)
   pageRef.current = page
 
-  const [bgAnalysis, setBgAnalysis] = useState<{
-    running: boolean
-    percent: number
-    prId: number | null
-  } | null>(null)
   const [completedNotice, setCompletedNotice] = useState<Review | null>(null)
-
   const [reviews, setReviews] = useState<Review[]>(reviewsSeed)
   const [selectedReview, setSelectedReview] = useState<Review>(reviewsSeed[0])
+
+  const runner = useAnalysisRunner({
+    onCreated: (created) => {
+      setReviews((prev) => [created, ...prev])
+      if (pageRef.current !== "last-analysis") {
+        setCompletedNotice(created)
+      }
+    },
+  })
   const [servicesStatus, setServicesStatus] = useState<ServicesStatus>({
     postgres: false,
     gemini: false,
@@ -191,24 +196,6 @@ export default function App() {
     }
   }
 
-  const titles: Record<Page, string> = {
-    new: "Nova Revisão",
-    history: "Histórico de Análises",
-    pending: "Gestão de Pendências & Débitos",
-    archived: "Análises Arquivadas",
-    detail: "Detalhe do Parecer",
-    admin: "Painel de Administração",
-  }
-
-  const subtitles: Record<Page, string> = {
-    new: "Inicie um novo parecer com os 5 agentes especialistas",
-    history: "Acompanhe todas as Pull Requests avaliadas pela plataforma",
-    pending: "Backlog de melhorias técnicas e débitos registrados para acompanhamento",
-    archived: "Revisões finalizadas arquivadas para referência futura",
-    detail: "Consolidado técnico dos pareceres e bloqueios encontrados",
-    admin: "Configure credenciais do Azure DevOps, GitHub, IA Gemini e consulte as diretrizes",
-  }
-
   if (!user) {
     return <WelcomeScreen onLogin={saveUser} />
   }
@@ -221,34 +208,67 @@ export default function App() {
         onNew={() => setPage("new")}
         user={user}
         servicesStatus={servicesStatus}
+        isAnalyzing={runner.running}
         onLogout={logout}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar
-          title={titles[page]}
-          subtitle={subtitles[page]}
+          title={
+            page === "last-analysis"
+              ? runner.running
+                ? "Análise em Andamento"
+                : "Última Análise"
+              : pageTitles[page] || "SogrAI"
+          }
+          subtitle={
+            page === "last-analysis"
+              ? runner.running
+                ? "Acompanhe em tempo real o processamento e a emissão dos pareceres pelos agentes especialistas"
+                : "Acompanhamento e resultado consolidado da análise mais recente"
+              : pageSubtitles[page] || ""
+          }
           theme={theme}
           toggleTheme={toggleTheme}
           user={user}
           onLogout={logout}
-          bgAnalysis={page !== "new" ? bgAnalysis : null}
-          onGoToAnalysis={() => setPage("new")}
+          bgAnalysis={
+            page !== "last-analysis" && runner.running
+              ? { running: runner.running, percent: runner.progress, prId: runner.runningPrId }
+              : null
+          }
+          onGoToAnalysis={() => setPage("last-analysis")}
           onGoToAdmin={() => setPage("admin")}
         />
 
         <main className="flex-1 overflow-y-auto p-8">
           <div className={page === "new" ? "block" : "hidden"}>
             <NewAnalysis
-              onCreated={(created) => {
-                setReviews((prev) => [created, ...prev])
-                if (pageRef.current !== "new") {
-                  setCompletedNotice(created)
-                }
+              onStartAnalysis={(config) => {
+                runner.startAnalysis(config).catch(() => {})
+                setPage("last-analysis")
               }}
-              onOpenDetail={openReview}
-              onProgressChange={setBgAnalysis}
+              running={runner.running}
+              runningPrId={runner.runningPrId}
               onOpenSettings={() => setPage("admin")}
+            />
+          </div>
+
+          <div className={page === "last-analysis" ? "block" : "hidden"}>
+            <LastAnalysisPage
+              running={runner.running}
+              done={runner.done}
+              progress={runner.progress}
+              currentStepText={runner.currentStepText}
+              activePrMeta={runner.activePrMeta}
+              fileLogs={runner.fileLogs}
+              currentFileAnalyzing={runner.currentFileAnalyzing}
+              analysisResult={runner.analysisResult}
+              completedReview={runner.completedReview}
+              errorMessage={runner.errorMessage}
+              onClearError={runner.clearError}
+              onOpenDetail={openReview}
+              onGoToNew={() => setPage("new")}
             />
           </div>
 

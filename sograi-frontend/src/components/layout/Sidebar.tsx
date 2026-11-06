@@ -11,6 +11,7 @@ import {
   LogOut,
   BookmarkCheck,
   BookOpen,
+  Activity,
 } from "lucide-react"
 import { Page, UserProfile, ServicesStatus } from "../../types"
 import { navItems } from "../../data/constants"
@@ -21,6 +22,7 @@ interface SidebarProps {
   onNew: () => void
   user: UserProfile
   servicesStatus?: ServicesStatus
+  isAnalyzing?: boolean
   onLogout?: () => void
 }
 
@@ -30,6 +32,7 @@ export function Sidebar({
   onNew,
   user,
   servicesStatus,
+  isAnalyzing,
   onLogout,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
@@ -135,15 +138,18 @@ export function Sidebar({
 
           let Icon = Clock
           if (item.id === "new") Icon = PlusCircle
+          else if (item.id === "last-analysis") Icon = Activity
           else if (item.id === "pending") Icon = BookmarkCheck
           else if (item.id === "archived") Icon = Archive
           else if (item.id === "guides") Icon = BookOpen
+
+          const isLastAnalysis = item.id === "last-analysis"
 
           return (
             <button
               key={item.id}
               onClick={() => setPage(item.id as Page)}
-              className={`w-full flex items-center gap-3 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              className={`relative w-full flex items-center justify-between rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 collapsed ? "justify-center p-2.5" : "px-3 py-2.5"
               } ${
                 active
@@ -152,8 +158,22 @@ export function Sidebar({
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              <div className="flex items-center gap-3 min-w-0">
+                <Icon className="w-4 h-4 shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </div>
+              {!collapsed && isLastAnalysis && isAnalyzing && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Em andamento</span>
+                </span>
+              )}
+              {collapsed && isLastAnalysis && isAnalyzing && (
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                </span>
+              )}
             </button>
           )
         })}
