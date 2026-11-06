@@ -52,22 +52,30 @@
   - **Item 5**: Simplificado o card [`AnalysisResultCard.tsx`](file:///home/nlnadialigia/www/code-review/sograi-frontend/src/components/reviews/AnalysisResultCard.tsx) para 70 linhas, exibindo somente o card de conclusão com `StatusBadge` e `RiskBadge` e botão direto "Ver Detalhe do Parecer".
   - **Item 6**: No seletor de projeto Azure em [`VcsPrExplorer.tsx`](file:///home/nlnadialigia/www/code-review/sograi-frontend/src/components/reviews/VcsPrExplorer.tsx), removida a seleção padrão inicial (inicia com `Selecione um projeto...`) e compactado o arquivo para 310 linhas (< 350).
 
+- **Empacotamento, Distribuição e Publicação (Monorepo "sograi" Concluído)**:
+  - Criado e atualizado o documento de diagnóstico em [`rascunho/diagnostico_empacotamento.md`](file:///home/nlnadialigia/www/code-review/rascunho/diagnostico_empacotamento.md).
+  - **Docker Compose Completo**:
+    - Criado [`sograi-backend/Dockerfile`](file:///home/nlnadialigia/www/code-review/sograi-backend/Dockerfile) multi-stage com Node 20 Alpine, sincronização Prisma e inicialização da API na porta 3333.
+    - Criado [`sograi-frontend/Dockerfile`](file:///home/nlnadialigia/www/code-review/sograi-frontend/Dockerfile) e [`sograi-frontend/nginx.conf`](file:///home/nlnadialigia/www/code-review/sograi-frontend/nginx.conf) servindo estáticos na porta 3000 com proxy reverso e suporte a Server-Sent Events (SSE).
+    - Criado [`docker-compose.yml`](file:///home/nlnadialigia/www/code-review/docker-compose.yml) orquestrando PostgreSQL 16 com volume persistente, Backend e Frontend. Validado com `docker compose config`.
+  - **Instalador Bare-Metal**:
+    - Criado [`install.sh`](file:///home/nlnadialigia/www/code-review/install.sh) automatizado e [`start.sh`](file:///home/nlnadialigia/www/code-review/start.sh) para ambiente de desenvolvimento com pnpm.
+  - **Documentação e Seção 01**:
+    - Criado [`sograi-backend/docs/guia_refinamento_prompts.md`](file:///home/nlnadialigia/www/code-review/sograi-backend/docs/guia_refinamento_prompts.md) detalhando o passo a passo de engenharia de prompts, clareza, objetividade e análise comparativa de idiomas (estratégia híbrida: raciocínio em inglês com saídas em português pt-BR).
+    - Criado [`README.md`](file:///home/nlnadialigia/www/code-review/README.md) na raiz do monorepo e atualizados [`sograi-backend/README.md`](file:///home/nlnadialigia/www/code-review/sograi-backend/README.md) e [`sograi-frontend/README.md`](file:///home/nlnadialigia/www/code-review/sograi-frontend/README.md).
+  - **Monorepo Git com Histórico Preservado**:
+    - Nome oficial aprovado: **`sograi`**.
+    - Repositório Git unificado na raiz preservando 100% dos commits originais de desenvolvimento de `sograi-backend` e `sograi-frontend`.
+    - Templates `.env.example` e `.gitignore` completos e higienizados (white-label).
+
 ## Decisions
 
+- **Nome do Repositório**: Definido como `sograi` para o Monorepo no GitHub.
+- **Estratégia de Git**: Monorepo unificado na raiz com preservação completa do histórico de commits dos dois repositórios locais.
+- **Estratégia de Idioma de Prompts**: Modelo Híbrido — instruções lógicas, papéis e contratos JSON em inglês para máxima precisão analítica e economia de tokens, com geração obrigatória de relatórios, justificativas e explicações em português do Brasil (pt-BR).
 - **Central de Orientações no Menu Principal**: Tornar a documentação de uso do SogrAI acessível diretamente na barra de navegação principal.
 - **Transição Suave de Análise**: Na tela de Nova Análise, manter o usuário no local exibindo o card de sucesso da PR concluída com link direto "Ver Detalhe do Parecer", em vez de forçar o redirecionamento imediato.
-- **Diálogos Modais em Vez de Janelas Nativas**: Substituição completa de `window.confirm` e `window.prompt` por `AlertDialog` e `ResolvePendingDialog` estilizados no padrão visual da aplicação.
-- **Seletores Nativos de Arquivo**: Substituir campos de busca por `<select>` nas pendências para garantir seleção precisa de arquivos auditados.
 
 ## Pending
 
-- Nenhuma pendência imediata. Aplicação compilando limpa e pronta para uso e testes.
-
-- **Diagnóstico Técnico - Empacotamento, Distribuição e Publicação (SogrAI)**:
-  - Criado o documento [`rascunho/diagnostico_empacotamento.md`](file:///home/nlnadialigia/www/code-review/rascunho/diagnostico_empacotamento.md) atendendo às solicitações de [`rascunho/empacotamento.md`](file:///home/nlnadialigia/www/code-review/rascunho/empacotamento.md).
-  - Alinhamentos confirmados:
-    - Repositório: Estrutura Monorepo única na raiz para o GitHub (sem necessidade de histórico de commits legados).
-    - Documentação: README principal na raiz + README do backend (linkando `docs/arquitetura_analise_prompts.md`) + README do frontend.
-    - Docker Compose: Completo com PostgreSQL, Backend NestJS e Frontend Nginx Alpine multi-stage com proxy reverso na porta 3000.
-    - Script Instalador: `install.sh` e `start.sh` para setup bare-metal com pnpm.
-    - White-label: Templates `.env.example` higienizados sem menções corporativas.
+- Nenhuma pendência técnica. Projeto empacotado, compilado com 0 erros e pronto para publicação no GitHub.
