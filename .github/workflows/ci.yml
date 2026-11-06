@@ -1,0 +1,84 @@
+name: SogrAI CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: Auditoria de Arquitetura & Limites de Linhas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Executar Checagem de Limite de Linhas
+        run: |
+          chmod +x scripts/check-line-limits.sh
+          ./scripts/check-line-limits.sh
+
+  backend:
+    name: Backend - Build & Validação Prisma
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Configurar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: sograi-backend/pnpm-lock.yaml
+
+      - name: Instalar Dependências do Backend
+        working-directory: sograi-backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Validar e Gerar Prisma Client
+        working-directory: sograi-backend
+        run: |
+          pnpm exec prisma validate
+          pnpm exec prisma generate
+
+      - name: Compilar Backend (NestJS Build)
+        working-directory: sograi-backend
+        run: pnpm build
+
+  frontend:
+    name: Frontend - Build & Validação Vite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Configurar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: sograi-frontend/pnpm-lock.yaml
+
+      - name: Instalar Dependências do Frontend
+        working-directory: sograi-frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Compilar Frontend (Vite Build)
+        working-directory: sograi-frontend
+        run: pnpm build

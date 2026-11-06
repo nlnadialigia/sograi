@@ -17,7 +17,6 @@ export function EditPendingModal({
   item,
   onSaved,
 }: EditPendingModalProps) {
-  const [title, setTitle] = useState("")
   const [filePath, setFilePath] = useState("")
   const [itemType, setItemType] = useState<"TECH_DEBT" | "IMPROVEMENT" | "FUTURE_REFACTOR">("TECH_DEBT")
   const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM")
@@ -27,9 +26,8 @@ export function EditPendingModal({
 
   useEffect(() => {
     if (item && isOpen) {
-      setTitle(item.title || "")
-      setFilePath(item.file_path || "")
-      setItemType((item.item_type as any) || "TECH_DEBT")
+      setFilePath(item.file_path || (item as any).filePath || "")
+      setItemType((item.item_type as any) || (item as any).itemType || "TECH_DEBT")
       setPriority((item.priority as any) || "MEDIUM")
       setDescription(item.description || "")
     }
@@ -39,8 +37,8 @@ export function EditPendingModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim() || !description.trim()) {
-      toast.error("Título e descrição são obrigatórios.")
+    if (!description.trim()) {
+      toast.error("A descrição da pendência é obrigatória.")
       return
     }
 
@@ -50,7 +48,7 @@ export function EditPendingModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title.trim(),
+          title: item.title || description.trim().slice(0, 60),
           filePath: filePath.trim(),
           itemType,
           priority,
@@ -80,18 +78,6 @@ export function EditPendingModal({
       className="max-w-lg"
     >
       <form onSubmit={handleSave} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-            Título da Pendência *
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
             Arquivo Afetado

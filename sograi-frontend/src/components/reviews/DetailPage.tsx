@@ -21,6 +21,7 @@ import { DetailFullReportView } from "./DetailFullReportView";
 import { DetailTrackingView } from "./DetailTrackingView";
 import { DetailCategoryIssuesView } from "./DetailCategoryIssuesView";
 import { ReviewPdfDocument } from "./ReviewPdfDocument";
+import { useToast } from "../ui/toast";
 
 interface DetailPageProps {
   review: Review;
@@ -31,33 +32,15 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   const [selected, setSelected] = useState("Resumo Executivo");
   const [fullPr, setFullPr] = useState<any>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const toast = useToast();
 
   const opinions = [
     { name: "Resumo Executivo", role: "Executivo", icon: Bot },
     { name: "Parecer Completo", role: "Técnico Integral", icon: FileText },
-    {
-      name: "Acompanhamento",
-      role: "Auditoria de Resolução",
-      icon: CheckCircle2,
-    },
-    {
-      name: "Segurança",
-      role: "OWASP & Secrets",
-      icon: Shield,
-      agentCategory: "SECURITY",
-    },
-    {
-      name: "Performance",
-      role: "Otimização",
-      icon: Zap,
-      agentCategory: "PERFORMANCE",
-    },
-    {
-      name: "Testes",
-      role: "Cobertura",
-      icon: CheckCircle,
-      agentCategory: "TESTS",
-    },
+    { name: "Acompanhamento", role: "Auditoria de Resolução", icon: CheckCircle2 },
+    { name: "Segurança", role: "OWASP & Secrets", icon: Shield, agentCategory: "SECURITY" },
+    { name: "Performance", role: "Otimização", icon: Zap, agentCategory: "PERFORMANCE" },
+    { name: "Testes", role: "Cobertura", icon: CheckCircle, agentCategory: "TESTS" },
     { name: "Estilo", role: "Clean Code", icon: Code, agentCategory: "STYLE" },
   ];
 
@@ -89,16 +72,32 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   const handleDownloadPdf = async () => {
     try {
       setIsExportingPdf(true);
-      const prData = fullPr || review;
+      toast.info("Processando parecer completo para PDF...");
+      let prData = fullPr;
+      if (!prData && review.dbId) {
+        const res = await fetch(`/api/reviews/${review.dbId}`);
+        if (res.ok) {
+          prData = await res.json();
+          setFullPr(prData);
+        }
+      }
+      prData = prData || review;
       const blob = await pdf(<ReviewPdfDocument pr={prData} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+      a.style.display = "none";
       a.href = url;
-      a.download = `sograi-parecer-completo-PR-${review.pr}.pdf`;
+      a.download = `sograi-parecer-completo-PR-${review.pr || review.id}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 3000);
+      toast.success("Download do PDF iniciado!");
+    } catch (err: any) {
       console.error("Erro ao gerar PDF completo:", err);
+      toast.error(err.message || "Erro ao exportar PDF.");
     } finally {
       setIsExportingPdf(false);
     }

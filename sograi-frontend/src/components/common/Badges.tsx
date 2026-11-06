@@ -81,3 +81,28 @@ export function PriorityBadge({ priority }: { priority: string }) {
   )
 }
 
+export function ItemTypeBadge({ itemType }: { itemType?: string }) {
+  const t = (itemType || "TECH_DEBT").trim().toUpperCase()
+  let label = "Débito Técnico"
+  let className =
+    "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60"
+
+  if (t === "IMPROVEMENT" || t === "MELHORIA") {
+    label = "Melhoria"
+    className =
+      "bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-300 border-sky-200/60 dark:border-sky-800/60"
+  } else if (t === "FUTURE_REFACTOR" || t === "REFATORACAO") {
+    label = "Refatoração Futura"
+    className =
+      "bg-purple-100 text-purple-900 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60"
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${className}`}
+    >
+      {label}
+    </span>
+  )
+}
+

@@ -47,7 +47,6 @@ export function OpenPrsTable({ prs, loading, runningPrId, onAnalyze }: OpenPrsTa
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {prs.map((pr) => {
             const isRunningThis = runningPrId === pr.pullRequestId
-            const isAnyRunning = runningPrId !== null
 
             return (
               <tr
@@ -57,7 +56,7 @@ export function OpenPrsTable({ prs, loading, runningPrId, onAnalyze }: OpenPrsTa
                 <td className="py-3 px-3 text-center whitespace-nowrap">
                   <button
                     onClick={() => onAnalyze(pr)}
-                    disabled={isAnyRunning}
+                    disabled={isRunningThis}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       isRunningThis
                         ? "bg-amber-500 text-slate-950 opacity-90 cursor-wait"

@@ -55,7 +55,11 @@ export function Sidebar({
       }`}
     >
       <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between">
+        <div
+          className={`flex items-center ${
+            collapsed ? "flex-col gap-2.5 justify-center" : "justify-between"
+          }`}
+        >
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black shrink-0 border border-amber-500/20">
               <Sparkles className="w-5 h-5" />
@@ -74,7 +78,7 @@ export function Sidebar({
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
             title={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -111,17 +115,6 @@ export function Sidebar({
             </div>
           </>
         )}
-
-        <button
-          onClick={onNew}
-          className={`mt-3.5 w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:border dark:border-amber-500/40 text-slate-950 dark:text-amber-300 font-bold text-xs transition-all cursor-pointer ${
-            collapsed ? "p-2.5" : "px-4 py-2.5"
-          }`}
-          title="Nova Análise"
-        >
-          <PlusCircle className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Nova Análise</span>}
-        </button>
       </div>
 
       {/* Navegação Principal */}

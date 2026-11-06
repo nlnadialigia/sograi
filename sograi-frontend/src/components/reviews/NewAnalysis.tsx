@@ -111,6 +111,7 @@ export function NewAnalysis({
         prMeta={modalPrMeta}
         onStartAnalysis={handleStart}
         isSubmitting={false}
+        isQueued={running}
       />
     </div>
   )

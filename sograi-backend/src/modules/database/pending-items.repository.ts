@@ -1,6 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
+function mapPendingItem(item: any) {
+  if (!item) return item;
+  return {
+    id: item.id,
+    pull_request_id: item.pullRequestId,
+    pullRequestId: item.pullRequestId,
+    repository: item.repository,
+    file_path: item.filePath,
+    filePath: item.filePath,
+    title: item.title,
+    description: item.description,
+    item_type: item.itemType,
+    itemType: item.itemType,
+    priority: item.priority,
+    author_name: item.authorName,
+    authorName: item.authorName,
+    status: item.status,
+    resolution_notes: item.resolutionNotes,
+    resolutionNotes: item.resolutionNotes,
+    resolved_at: item.resolvedAt,
+    resolvedAt: item.resolvedAt,
+    created_at: item.createdAt,
+    createdAt: item.createdAt,
+  };
+}
+
 @Injectable()
 export class PendingItemsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,7 +41,7 @@ export class PendingItemsRepository {
     priority?: string;
     authorName?: string;
   }) {
-    return this.prisma.manualPendingItem.create({
+    const created = await this.prisma.manualPendingItem.create({
       data: {
         pullRequestId: data.prId,
         repository: data.repository,
@@ -28,6 +54,7 @@ export class PendingItemsRepository {
         status: 'PENDING',
       },
     });
+    return mapPendingItem(created);
   }
 
   async findAll(filters?: { repository?: string; status?: string }) {
@@ -39,21 +66,23 @@ export class PendingItemsRepository {
       where.repository = filters.repository;
     }
 
-    return this.prisma.manualPendingItem.findMany({
+    const items = await this.prisma.manualPendingItem.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
+    return items.map(mapPendingItem);
   }
 
   async findByPr(repository: string, prId: string) {
-    return this.prisma.manualPendingItem.findMany({
+    const items = await this.prisma.manualPendingItem.findMany({
       where: { repository, pullRequestId: prId },
       orderBy: { createdAt: 'desc' },
     });
+    return items.map(mapPendingItem);
   }
 
   async resolve(id: number, notes?: string) {
-    return this.prisma.manualPendingItem.update({
+    const updated = await this.prisma.manualPendingItem.update({
       where: { id },
       data: {
         status: 'RESOLVED',
@@ -61,6 +90,7 @@ export class PendingItemsRepository {
         resolvedAt: new Date(),
       },
     });
+    return mapPendingItem(updated);
   }
 
   async delete(id: number) {
@@ -79,7 +109,7 @@ export class PendingItemsRepository {
       priority?: string;
     }
   ) {
-    return this.prisma.manualPendingItem.update({
+    const updated = await this.prisma.manualPendingItem.update({
       where: { id },
       data: {
         ...(data.title ? { title: data.title } : {}),
@@ -89,5 +119,6 @@ export class PendingItemsRepository {
         ...(data.priority ? { priority: data.priority } : {}),
       },
     });
+    return mapPendingItem(updated);
   }
 }
