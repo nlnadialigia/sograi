@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Builds e saídas de compilação
+dist/
+build/
+*.tsbuildinfo
+
+# Variáveis de Ambiente e Segredos
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Docker e Banco
+postgres_data/
+
+# IDE e Sistema Operacional
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Rascunhos e temporários internos (exceto arquivos de documentação)
+/rascunho/backup/

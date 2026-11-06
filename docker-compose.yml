@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sograi-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sograi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sograi123}
+      POSTGRES_DB: ${POSTGRES_DB:-sograi_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sograi} -d ${POSTGRES_DB:-sograi_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./sograi-backend
+      dockerfile: Dockerfile
+    container_name: sograi-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3333
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sograi}:${POSTGRES_PASSWORD:-sograi123}@postgres:5432/${POSTGRES_DB:-sograi_db}?schema=public
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      AZURE_DEVOPS_ORG: ${AZURE_DEVOPS_ORG}
+      AZURE_DEVOPS_PROJECT: ${AZURE_DEVOPS_PROJECT}
+      AZURE_DEVOPS_TOKEN: ${AZURE_DEVOPS_TOKEN}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    ports:
+      - "3333:3333"
+
+  frontend:
+    build:
+      context: ./sograi-frontend
+      dockerfile: Dockerfile
+    container_name: sograi-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
+    name: sograi_postgres_data

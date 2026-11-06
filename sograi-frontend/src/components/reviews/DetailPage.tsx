@@ -1,0 +1,356 @@
+import { pdf } from "@react-pdf/renderer";
+import {
+  ArrowLeft,
+  Bot,
+  CheckCircle,
+  CheckCircle2,
+  Clock,
+  Code,
+  Download,
+  ExternalLink,
+  FileText,
+  Shield,
+  Wrench,
+  Zap,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Review } from "../../types";
+import { RiskBadge, StatusBadge } from "../common/Badges";
+import { DetailExecutiveView } from "./DetailExecutiveView";
+import { DetailFullReportView } from "./DetailFullReportView";
+import { DetailTrackingView } from "./DetailTrackingView";
+import { ReviewPdfDocument } from "./ReviewPdfDocument";
+
+interface DetailPageProps {
+  review: Review;
+  onBack: () => void;
+}
+
+export function DetailPage({ review, onBack }: DetailPageProps) {
+  const [selected, setSelected] = useState("Resumo Executivo");
+  const [fullPr, setFullPr] = useState<any>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const opinions = [
+    { name: "Resumo Executivo", role: "Executivo", icon: Bot },
+    { name: "Parecer Completo", role: "Técnico Integral", icon: FileText },
+    {
+      name: "Acompanhamento",
+      role: "Auditoria de Resolução",
+      icon: CheckCircle2,
+    },
+    {
+      name: "Segurança",
+      role: "OWASP & Secrets",
+      icon: Shield,
+      agentCategory: "SECURITY",
+    },
+    {
+      name: "Performance",
+      role: "Otimização",
+      icon: Zap,
+      agentCategory: "PERFORMANCE",
+    },
+    {
+      name: "Testes",
+      role: "Cobertura",
+      icon: CheckCircle,
+      agentCategory: "TESTS",
+    },
+    { name: "Estilo", role: "Clean Code", icon: Code, agentCategory: "STYLE" },
+  ];
+
+  useEffect(() => {
+    if (review.dbId) {
+      fetch(`/api/reviews/${review.dbId}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data) setFullPr(data);
+        })
+        .catch(() => {});
+    }
+  }, [review.dbId]);
+
+  const formatAuthorName = (fullName: string) => {
+    const parts = (fullName || "").trim().split(" ").filter(Boolean);
+    if (parts.length <= 1) return fullName || "Desconhecido";
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  };
+
+  const azureUrl = useMemo(() => {
+    const org = review.organization || fullPr?.organization;
+    const proj = review.project || fullPr?.project;
+    const repo = review.repository;
+    const prId = review.pr;
+    return `https://dev.azure.com/${org}/${proj}/_git/${repo}/pullrequest/${prId}`;
+  }, [review, fullPr]);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      const prData = fullPr || review;
+      const blob = await pdf(<ReviewPdfDocument pr={prData} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sograi-parecer-completo-PR-${review.pr}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erro ao gerar PDF completo:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
+  const handleDownloadSpec = () => {
+    if (review.dbId) {
+      window.open(`/api/reviews/${review.dbId}/spec`, "_blank");
+    }
+  };
+
+  const activeCategory = opinions.find(
+    (o) => o.name === selected,
+  )?.agentCategory;
+  const categoryIssues = useMemo(() => {
+    if (!activeCategory || !fullPr?.files) return [];
+    const list: any[] = [];
+    fullPr.files.forEach((f: any) => {
+      (f.issues || []).forEach((iss: any) => {
+        if (iss.category === activeCategory) {
+          list.push({
+            ...iss,
+            filePath: f.file_path,
+            fileDecision: f.decision,
+          });
+        }
+      });
+    });
+    return list;
+  }, [activeCategory, fullPr]);
+
+  const trackingItems = fullPr?.trackingItems || [];
+  const blockers = useMemo(() => {
+    if (!fullPr?.files) return [];
+    const list: any[] = [];
+    fullPr.files.forEach((f: any) => {
+      (f.issues || []).forEach((iss: any) => {
+        if (iss.severity === "BLOCKER")
+          list.push({ ...iss, filePath: f.file_path });
+      });
+    });
+    return list;
+  }, [fullPr]);
+
+  const warnings = useMemo(() => {
+    if (!fullPr?.files) return [];
+    const list: any[] = [];
+    fullPr.files.forEach((f: any) => {
+      (f.issues || []).forEach((iss: any) => {
+        if (iss.severity === "WARNING" || iss.severity === "SUGGESTION") {
+          list.push({ ...iss, filePath: f.file_path });
+        }
+      });
+    });
+    return list;
+  }, [fullPr]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar para a listagem</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          {!review.isArchived && (
+            <button
+              onClick={handleDownloadSpec}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Baixar plano de ação Markdown para a IDE"
+            >
+              <Wrench className="w-3.5 h-3.5 text-amber-500" />
+              <span>Spec de Correção (.md)</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
+            title="Exportar Parecer Completo com todos os arquivos em PDF"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>
+              {isExportingPdf ? "Gerando PDF..." : "Exportar PDF Completo"}
+            </span>
+          </button>
+
+          <a
+            href={azureUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+          >
+            <span>Abrir no Azure</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                {review.id}
+              </span>
+              <span className="text-slate-400">•</span>
+              <span className="text-xs font-semibold text-slate-500">
+                PR #{review.pr}
+              </span>
+              <span className="text-slate-400">•</span>
+              <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                {review.repository}
+              </span>
+              {fullPr?.iteration && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                  Iteração {fullPr.iteration}
+                </span>
+              )}
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              {review.title}
+            </h2>
+            <div className="flex items-center gap-3 mt-3 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {formatAuthorName(review.author)}
+              </span>
+              <span>•</span>
+              <span>Analisado em {review.date}</span>
+              {fullPr?.total_files_changed && (
+                <>
+                  <span>•</span>
+                  <span>{fullPr.total_files_changed} arquivos modificados</span>
+                </>
+              )}
+              {fullPr?.time_to_fix && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                    <Clock className="w-3 h-3" /> {fullPr.time_to_fix}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <StatusBadge status={review.status} />
+            <RiskBadge risk={review.risk} />
+          </div>
+        </div>
+
+        <div className="pt-6">
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">
+            Visão de Análise
+          </p>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {opinions.map((op) => {
+              const active = selected === op.name;
+              const Icon = op.icon;
+              return (
+                <button
+                  key={op.name}
+                  onClick={() => setSelected(op.name)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
+                    active
+                      ? "bg-amber-500 text-slate-950 font-bold shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{op.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        {selected === "Resumo Executivo" && (
+          <DetailExecutiveView
+            fullPr={fullPr}
+            review={review}
+            blockers={blockers}
+            warnings={warnings}
+          />
+        )}
+
+        {selected === "Parecer Completo" && (
+          <DetailFullReportView fullPr={fullPr} review={review} />
+        )}
+
+        {selected === "Acompanhamento" && (
+          <DetailTrackingView trackingItems={trackingItems} />
+        )}
+
+        {selected !== "Resumo Executivo" &&
+          selected !== "Parecer Completo" &&
+          selected !== "Acompanhamento" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Apontamentos Estruturados: {selected}
+                </h3>
+                <span className="text-xs text-slate-500">
+                  {categoryIssues.length} itens identificados
+                </span>
+              </div>
+
+              {categoryIssues.length === 0 ? (
+                <div className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
+                  Nenhum problema de {selected.toLowerCase()} identificado nos
+                  arquivos desta PR.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {categoryIssues.map((iss, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 text-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                          {iss.filePath}
+                        </span>
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          {iss.severity}
+                        </span>
+                      </div>
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {iss.title}
+                      </p>
+                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                        {iss.description}
+                      </p>
+                      {iss.suggestedCode && (
+                        <pre className="p-2 rounded bg-slate-100 dark:bg-slate-950 font-mono text-[10px] overflow-x-auto text-amber-600 dark:text-amber-400">
+                          {iss.suggestedCode}
+                        </pre>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+      </div>
+    </div>
+  );
+}

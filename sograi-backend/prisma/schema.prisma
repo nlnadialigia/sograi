@@ -1,0 +1,154 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PullRequest {
+  id                 Int              @id @default(autoincrement())
+  pullRequestId      String           @map("pull_request_id") @db.VarChar(50)
+  organization       String?          @db.VarChar(100)
+  project            String?          @db.VarChar(100)
+  repository         String?          @db.VarChar(100)
+  title              String?          @db.Text
+  author             String?          @db.VarChar(150)
+  sourceBranch       String?          @map("source_branch") @db.VarChar(255)
+  targetBranch       String?          @map("target_branch") @db.VarChar(255)
+  status             String?          @db.VarChar(50)
+  decision           String?          @db.VarChar(50)
+  totalFilesChanged  Int              @default(0) @map("total_files_changed")
+  filesWithIssues    Int              @default(0) @map("files_with_issues")
+  durationSeconds    Decimal?         @map("duration_seconds") @db.Decimal(10, 2)
+  executiveSummary   String?          @map("executive_summary") @db.Text
+  riskLevel          String?          @default("MEDIO") @map("risk_level") @db.VarChar(20)
+  isArchived         Boolean          @default(false) @map("is_archived")
+  iteration          Int              @default(1)
+  timeToFix          String?          @map("time_to_fix") @db.VarChar(50)
+  executiveVerdict   String?          @map("executive_verdict") @db.VarChar(50)
+  changeSummary      String?          @map("change_summary") @db.Text
+  recommendation     String?          @db.Text
+  executiveMarkdown  String?          @map("executive_markdown") @db.Text
+  specMarkdown       String?          @map("spec_markdown") @db.Text
+  fullMarkdown       String?          @map("full_markdown") @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  fileReviews        PrFileReview[]
+
+  @@unique([organization, project, repository, pullRequestId], map: "uk_pull_requests_repo_pr")
+  @@index([pullRequestId], map: "idx_pr_id")
+  @@index([repository], map: "idx_pr_repo")
+  @@map("pull_requests")
+}
+
+model PrFileReview {
+  id            Int            @id @default(autoincrement())
+  prId          Int            @map("pr_id")
+  filePath      String         @map("file_path") @db.Text
+  decision      String         @db.VarChar(50)
+  changeType    String?        @default("edit") @map("change_type") @db.VarChar(20)
+  justification String?        @db.Text
+  rawAnalysis   Json?          @map("raw_analysis")
+  fileLines     Int?           @default(0) @map("file_lines")
+  fileBytes     Int?           @default(0) @map("file_bytes")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  pullRequest   PullRequest    @relation(fields: [prId], references: [id], onDelete: Cascade)
+  issues        PrFileIssue[]
+  agentReviews  AgentReview[]
+
+  @@index([prId], map: "idx_file_pr_id")
+  @@map("pr_file_reviews")
+}
+
+model PrFileIssue {
+  id            Int          @id @default(autoincrement())
+  fileReviewId  Int          @map("file_review_id")
+  agentCategory String       @map("agent_category") @db.VarChar(50)
+  severity      String       @db.VarChar(20)
+  title         String       @db.VarChar(255)
+  description   String?      @db.Text
+  lineReference String?      @map("line_reference") @db.VarChar(50)
+  suggestedCode String?      @map("suggested_code") @db.Text
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  fileReview    PrFileReview @relation(fields: [fileReviewId], references: [id], onDelete: Cascade)
+
+  @@index([fileReviewId], map: "idx_issue_file_id")
+  @@map("pr_file_issues")
+}
+
+model AgentReview {
+  id           Int          @id @default(autoincrement())
+  fileReviewId Int          @map("file_review_id")
+  agentName    String       @map("agent_name") @db.VarChar(50)
+  issuesText   String?      @map("issues_text") @db.Text
+  decision     String       @db.VarChar(50)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  fileReview   PrFileReview @relation(fields: [fileReviewId], references: [id], onDelete: Cascade)
+
+  @@index([fileReviewId], map: "idx_agent_file_id")
+  @@map("agent_reviews")
+}
+
+model PrTrackingItem {
+  id                     Int       @id @default(autoincrement())
+  pullRequestId          String    @map("pull_request_id") @db.VarChar(50)
+  organization           String    @db.VarChar(100)
+  project                String    @db.VarChar(100)
+  repository             String    @db.VarChar(100)
+  filePath               String    @map("file_path") @db.Text
+  initialDecision        String    @map("initial_decision") @db.VarChar(50)
+  initialIssueTitle      String    @map("initial_issue_title") @db.VarChar(255)
+  initialIssueDescription String   @map("initial_issue_description") @db.Text
+  currentStatus          String    @default("PENDING") @map("current_status") @db.VarChar(20)
+  resolutionNotes        String?   @map("resolution_notes") @db.Text
+  lastIterationChecked   Int       @default(1) @map("last_iteration_checked")
+  firstIdentifiedAt      DateTime  @default(now()) @map("first_identified_at") @db.Timestamptz(6)
+  resolvedAt             DateTime? @map("resolved_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([organization, project, repository, pullRequestId, filePath], map: "uk_tracking_item")
+  @@index([pullRequestId, repository], map: "idx_tracking_pr")
+  @@map("pr_tracking_items")
+}
+
+model ManualPendingItem {
+  id              Int       @id @default(autoincrement())
+  pullRequestId   String    @map("pull_request_id") @db.VarChar(50)
+  repository      String    @db.VarChar(100)
+  filePath        String    @map("file_path") @db.Text
+  title           String    @db.VarChar(255)
+  description     String    @db.Text
+  itemType        String    @default("TECH_DEBT") @map("item_type") @db.VarChar(50)
+  priority        String    @default("MEDIUM") @db.VarChar(20)
+  status          String    @default("PENDING") @db.VarChar(20)
+  authorName      String?   @default("Tech Lead") @map("author_name") @db.VarChar(100)
+  resolutionNotes String?   @map("resolution_notes") @db.Text
+  resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([pullRequestId, repository], map: "idx_manual_pending_pr")
+  @@index([status], map: "idx_manual_pending_status")
+  @@map("pr_manual_pending_items")
+}
+
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  category    String   @default("general") @db.VarChar(50)
+  isSecret    Boolean  @default(false) @map("is_secret")
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([category], map: "idx_setting_category")
+  @@map("system_settings")
+}
+
