@@ -3,18 +3,17 @@ version: '3.8'
 services:
   postgres:
     image: postgres:18
-    container_name: code_review_postgres
-    restart: unless-stopped
+    container_name: sograi-local
+    restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-code_review}
+      POSTGRES_USER: ${POSTGRES_USER:-sograi-local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sograi-local}
+      POSTGRES_DB: ${POSTGRES_DB:-sograi_local_db}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-9092}:5432"
     volumes:
-      - code_review_pgdata:/var/lib/postgresql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - sograi_local_pgdata::/var/lib/postgresql
 
 volumes:
-  code_review_pgdata:
-    name: code_review_postgres_data
+  sograi_pgdata:
+    name: sograi_local_postgres_data
