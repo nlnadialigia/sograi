@@ -35,4 +35,7 @@ postgres_data/
 Thumbs.db
 
 # Rascunhos e temporários internos (exceto arquivos de documentação)
-/rascunho/backup/
+/rascunho
+session.md
+historic.md
+
