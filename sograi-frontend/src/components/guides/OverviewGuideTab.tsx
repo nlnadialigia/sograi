@@ -1,4 +1,4 @@
-import { Sparkles, GitPullRequest, Bot, ShieldCheck, CheckCircle2, AlertTriangle, XCircle } from "lucide-react"
+import { Sparkles, GitPullRequest, Bot, ShieldCheck, CheckCircle2, AlertTriangle, XCircle, MessageSquarePlus } from "lucide-react"
 
 export function OverviewGuideTab() {
   return (
@@ -103,6 +103,17 @@ export function OverviewGuideTab() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Canal de Sugestões e Reporte de Bugs */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+          <MessageSquarePlus className="w-4 h-4 text-amber-500" />
+          Canal Integrado de Feedback e Reporte de Bugs
+        </h4>
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          No canto superior direito da plataforma, logo ao lado da engrenagem de configurações, você encontra o botão de <strong>Sugestões / Bugs</strong>. Clicar nele abre um modal rápido onde você pode enviar ideias de novas features (tag <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 font-semibold">enhancement</code>) ou reportar anomalias (tag <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-rose-600 font-semibold">bug</code>), que são convertidas imediatamente em <strong>Issues oficiais no GitHub</strong> da plataforma.
+        </p>
       </div>
     </div>
   )

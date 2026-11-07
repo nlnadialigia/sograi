@@ -37,10 +37,10 @@ jobs:
         with:
           version: 12.16.1
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           cache-dependency-path: sograi-backend/pnpm-lock.yaml
 
@@ -53,6 +53,10 @@ jobs:
         run: |
           pnpm exec prisma validate
           pnpm exec prisma generate
+
+      - name: Executar Testes Unitários do Backend
+        working-directory: sograi-backend
+        run: pnpm test
 
       - name: Compilar Backend (NestJS Build)
         working-directory: sograi-backend
@@ -70,16 +74,20 @@ jobs:
         with:
           version: 12.16.1
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           cache-dependency-path: sograi-frontend/pnpm-lock.yaml
 
       - name: Instalar Dependências do Frontend
         working-directory: sograi-frontend
         run: pnpm install --frozen-lockfile
+
+      - name: Executar Testes Unitários do Frontend
+        working-directory: sograi-frontend
+        run: pnpm test
 
       - name: Compilar Frontend (Vite Build)
         working-directory: sograi-frontend

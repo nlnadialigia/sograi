@@ -1,4 +1,4 @@
-import { PlayCircle, Search, Layers, Link as LinkIcon, Radio, Bell, CheckCircle2 } from "lucide-react"
+import { PlayCircle, Search, Layers, Link as LinkIcon, Radio, Bell, CheckCircle2, ListOrdered, Activity } from "lucide-react"
 
 export function AnalysisGuideTab() {
   return (
@@ -56,6 +56,35 @@ export function AnalysisGuideTab() {
             <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono truncate">
               Ex: https://dev.azure.com/org/proj/_git/repo/pullrequest/1234
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fila de Análise e Monitoramento */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+          <ListOrdered className="w-4 h-4 text-amber-500" />
+          Fila Inteligente (FIFO) & "Última Análise"
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+            <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Activity className="w-4 h-4 text-emerald-500" />
+              <span>Análises Concorrentes Desbloqueadas</span>
+            </p>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+              O botão de análise nunca fica desabilitado para outras PRs. Caso já exista uma auditoria rodando, clicar em <strong>"Confirmar e Enfileirar"</strong> coloca a nova PR em uma fila FIFO garantida no servidor, processando-as sequencialmente sem perda de contexto.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+            <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <PlayCircle className="w-4 h-4 text-amber-500" />
+              <span>Página "Última Análise"</span>
+            </p>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+              A tela de <strong>Nova Análise</strong> agora é dedicada exclusivamente ao formulário e descoberta de PRs. O progresso em tempo real fica na tela <strong>"Última Análise"</strong>, exibindo os pareceres parciais conforme os agentes terminam cada arquivo.
+            </p>
           </div>
         </div>
       </div>

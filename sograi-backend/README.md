@@ -2,6 +2,8 @@
 
 > API RESTful em NestJS para auditoria automatizada e implacável de Pull Requests no **Azure DevOps** e **GitHub**, utilizando comitê multi-agente com inteligência artificial generativa (Google Gemini) e persistência relacional com **Prisma ORM** e **PostgreSQL**.
 
+[![Swagger OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=flat&logo=swagger&logoColor=black)](http://localhost:3333/api/docs)
+
 ---
 
 ## 🚀 Tecnologias
@@ -30,12 +32,12 @@ sograi-backend/
 ├── src/
 │   ├── modules/
 │   │   ├── azure/                       # Cliente REST do Azure DevOps
-│   │   ├── github/                      # Cliente REST do GitHub
+│   │   ├── github/                      # Cliente REST do GitHub e criação automática de Issues
 │   │   ├── gemini/                      # Integração com Gemini e reparo de JSON
-│   │   ├── reviews/                     # Orquestrador do pipeline de code review e SSE
-│   │   ├── pending/                     # Gestão de pendências e débitos técnicos manuais
+│   │   ├── reviews/                     # Pipeline de review, SSE e fila FIFO (analysis-queue)
+│   │   ├── pending/                     # Gestão de pendências por arquivo e notas de resolução
 │   │   ├── settings/                    # Gestão e teste de credenciais e tokens mascarados
-│   │   └── database/                    # PrismaService e conexões
+│   │   └── database/                    # PrismaService, repositórios e conexões
 │   ├── app.module.ts
 │   └── main.ts                          # Bootstrap da API (porta 3333)
 ├── .env.example                         # Template limpo de variáveis de ambiente
@@ -57,6 +59,11 @@ A documentação especializada de inteligência artificial da SogrAI está dispo
    - Passo a passo de engenharia de prompt para revisão de código.
    - Boas práticas para instruções claras, determinísticas e contratos de saída JSON rígidos.
    - Análise comparativa: **Inglês vs. Português** e por que adotamos o modelo híbrido (raciocínio em inglês, relatórios finais em português pt-BR).
+
+3. **Governança Arquitetural & Limite de Linhas**:
+   - Limite estrito de no máximo **500 linhas** por classe de serviço (`*.service.ts`).
+   - Aprovação determinística de migrações automáticas (`migration.sql`).
+   - Validação automatizada via script `scripts/check-line-limits.sh` no pipeline de CI.
 
 ---
 

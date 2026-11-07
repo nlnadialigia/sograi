@@ -2,20 +2,16 @@ import { useState, useEffect, useMemo } from "react"
 import {
   BookmarkCheck,
   Search,
-  CheckCircle2,
-  Trash2,
-  Pencil,
   Loader2,
   Plus,
-  FileCode,
 } from "lucide-react"
-import { ManualPendingItem, Review } from "../../types"
-import { PriorityBadge, ItemTypeBadge } from "../common/Badges"
+import { ManualPendingItem } from "../../types"
 import { AlertDialog } from "../ui/alert-dialog"
 import { useToast } from "../ui/toast"
 import { AddPendingModal } from "./AddPendingModal"
 import { EditPendingModal } from "./EditPendingModal"
 import { ResolvePendingDialog } from "./ResolvePendingDialog"
+import { PendingCard } from "./PendingCard"
 
 export function PendingPage() {
   const [items, setItems] = useState<ManualPendingItem[]>([])
@@ -174,76 +170,16 @@ export function PendingPage() {
               <p className="text-xs text-slate-500">Nenhuma pendência encontrada para este filtro.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredItems.map((item) => {
-                const isResolved = item.status === "RESOLVED"
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-4 rounded-xl border text-xs space-y-2 transition-all ${
-                      isResolved
-                        ? "bg-slate-50/60 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800 opacity-70"
-                        : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-xs"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="inline-flex items-center gap-1.5 font-mono font-bold text-slate-900 dark:text-white text-xs truncate">
-                          <FileCode className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span className="truncate">{item.file_path || (item as any).filePath || "Arquivo Geral"}</span>
-                        </span>
-                        <span className="text-slate-300 dark:text-slate-700">•</span>
-                        <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded shrink-0">
-                          {item.repository}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <ItemTypeBadge itemType={item.item_type || (item as any).itemType} />
-                        <PriorityBadge priority={item.priority} />
-                        {!isResolved && (
-                          <button
-                            onClick={() => setResolveItem(item)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-[10px] cursor-pointer"
-                          >
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Marcar Resolvido</span>
-                          </button>
-                        )}
-                        {!isResolved && (
-                          <button
-                            onClick={() => setItemToEdit(item)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 cursor-pointer"
-                            title="Editar pendência"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setDeleteItem(item)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer"
-                          title="Remover pendência"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap text-xs pt-1">
-                      {item.description}
-                    </p>
-
-                    {(item.resolution_notes || (item as any).resolutionNotes) && (
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>Resolução: {item.resolution_notes || (item as any).resolutionNotes}</span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+            <div className="space-y-3.5">
+              {filteredItems.map((item) => (
+                <PendingCard
+                  key={item.id}
+                  item={item}
+                  onResolve={(i) => setResolveItem(i)}
+                  onEdit={(i) => setItemToEdit(i)}
+                  onDelete={(i) => setDeleteItem(i)}
+                />
+              ))}
             </div>
           )}
         </div>
