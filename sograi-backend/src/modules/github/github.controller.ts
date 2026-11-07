@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { GitHubService } from './github.service';
 import { DatabaseService } from '../database/database.service';
 
@@ -8,6 +8,34 @@ export class GitHubController {
     private readonly gitHubService: GitHubService,
     private readonly dbService: DatabaseService
   ) {}
+
+  @Post('issues')
+  async createIssue(
+    @Body()
+    dto: {
+      title: string;
+      body: string;
+      type?: 'bug' | 'enhancement';
+      owner?: string;
+      repository?: string;
+    }
+  ) {
+    if (!dto.title?.trim()) {
+      throw new Error('O título da issue é obrigatório.');
+    }
+    if (!dto.body?.trim()) {
+      throw new Error('A descrição da issue é obrigatória.');
+    }
+
+    const labels = dto.type === 'bug' ? ['bug'] : ['enhancement'];
+    return this.gitHubService.createIssue({
+      title: dto.title.trim(),
+      body: dto.body.trim(),
+      labels,
+      owner: dto.owner,
+      repository: dto.repository,
+    });
+  }
 
   @Get('repositories')
   async getRepositories() {

@@ -3,6 +3,7 @@ import { Page, Review, Theme, UserProfile, ServicesStatus, ReviewStatus, Risk } 
 import { reviewsSeed, pageTitles, pageSubtitles } from "./data/constants"
 import { Sidebar } from "./components/layout/Sidebar"
 import { Topbar } from "./components/layout/Topbar"
+import { SuggestionModal } from "./components/layout/SuggestionModal"
 import { WelcomeScreen } from "./components/layout/WelcomeScreen"
 import { NewAnalysis } from "./components/reviews/NewAnalysis"
 import { LastAnalysisPage } from "./components/reviews/LastAnalysisPage"
@@ -39,6 +40,7 @@ export default function App() {
   pageRef.current = page
 
   const [completedNotice, setCompletedNotice] = useState<Review | null>(null)
+  const [suggestionOpen, setSuggestionOpen] = useState(false)
   const [reviews, setReviews] = useState<Review[]>(reviewsSeed)
   const [selectedReview, setSelectedReview] = useState<Review>(reviewsSeed[0])
 
@@ -156,20 +158,15 @@ export default function App() {
   const currentReviews = reviews.filter((review) => !review.archived)
   const archivedReviews = reviews.filter((review) => review.archived)
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"))
-  }
-
+  const toggleTheme = () => setTheme((prev) => (prev === "light" ? "dark" : "light"))
   const saveUser = (profile: UserProfile) => {
     setUser(profile)
     localStorage.setItem("sograi-user", JSON.stringify(profile))
   }
-
   const logout = () => {
     setUser(null)
     localStorage.removeItem("sograi-user")
   }
-
   const openReview = (review: Review) => {
     setSelectedReview(review)
     setPage("detail")
@@ -177,23 +174,15 @@ export default function App() {
 
   const toggleArchive = async (id: string) => {
     const target = reviews.find((r) => r.id === id)
-    if (target?.dbId) {
-      fetch(`/api/reviews/${target.dbId}/archive`, { method: "PATCH" }).catch(() => {})
-    }
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, archived: !r.archived } : r))
-    )
+    if (target?.dbId) fetch(`/api/reviews/${target.dbId}/archive`, { method: "PATCH" }).catch(() => {})
+    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, archived: !r.archived } : r)))
   }
 
   const deleteReview = async (id: string) => {
     const target = reviews.find((r) => r.id === id)
-    if (target?.dbId) {
-      fetch(`/api/reviews/${target.dbId}`, { method: "DELETE" }).catch(() => {})
-    }
+    if (target?.dbId) fetch(`/api/reviews/${target.dbId}`, { method: "DELETE" }).catch(() => {})
     setReviews((prev) => prev.filter((r) => r.id !== id))
-    if (selectedReview?.id === id) {
-      setPage("history")
-    }
+    if (selectedReview?.id === id) setPage("history")
   }
 
   if (!user) {
@@ -239,6 +228,7 @@ export default function App() {
           }
           onGoToAnalysis={() => setPage("last-analysis")}
           onGoToAdmin={() => setPage("admin")}
+          onOpenSuggestion={() => setSuggestionOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto p-8">
@@ -341,6 +331,12 @@ export default function App() {
             </div>
           </div>
         )}
+
+        <SuggestionModal
+          isOpen={suggestionOpen}
+          onClose={() => setSuggestionOpen(false)}
+          user={user}
+        />
       </div>
     </div>
   )

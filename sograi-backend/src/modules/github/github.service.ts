@@ -200,4 +200,40 @@ export class GitHubService {
 
     return { prDetails, files };
   }
+
+  async createIssue(
+    data: { title: string; body: string; labels?: string[]; owner?: string; repository?: string },
+    customToken?: string
+  ) {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.getAuthHeaders(customToken);
+    const defaultOrg = await this.settingsService.get('GITHUB_DEFAULT_ORG');
+
+    const owner = data.owner || defaultOrg || 'nlnadialigia';
+    const repository = data.repository || 'sograi';
+
+    try {
+      const res = await axios.post(
+        `${apiUrl}/repos/${owner}/${repository}/issues`,
+        {
+          title: data.title,
+          body: data.body,
+          labels: data.labels || [],
+        },
+        { headers }
+      );
+
+      return {
+        id: res.data.id,
+        number: res.data.number,
+        htmlUrl: res.data.html_url,
+        title: res.data.title,
+        state: res.data.state,
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message;
+      this.logger.error(`Falha ao criar issue no GitHub (${owner}/${repository}): ${msg}`);
+      throw new Error(`Falha ao criar issue no GitHub: ${msg}`);
+    }
+  }
 }
