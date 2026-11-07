@@ -19,7 +19,9 @@ import { RiskBadge, StatusBadge } from "../common/Badges";
 import { DetailExecutiveView } from "./DetailExecutiveView";
 import { DetailFullReportView } from "./DetailFullReportView";
 import { DetailTrackingView } from "./DetailTrackingView";
+import { DetailCategoryIssuesView } from "./DetailCategoryIssuesView";
 import { ReviewPdfDocument } from "./ReviewPdfDocument";
+import { useToast } from "../ui/toast";
 
 interface DetailPageProps {
   review: Review;
@@ -30,33 +32,15 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   const [selected, setSelected] = useState("Resumo Executivo");
   const [fullPr, setFullPr] = useState<any>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const toast = useToast();
 
   const opinions = [
     { name: "Resumo Executivo", role: "Executivo", icon: Bot },
     { name: "Parecer Completo", role: "Técnico Integral", icon: FileText },
-    {
-      name: "Acompanhamento",
-      role: "Auditoria de Resolução",
-      icon: CheckCircle2,
-    },
-    {
-      name: "Segurança",
-      role: "OWASP & Secrets",
-      icon: Shield,
-      agentCategory: "SECURITY",
-    },
-    {
-      name: "Performance",
-      role: "Otimização",
-      icon: Zap,
-      agentCategory: "PERFORMANCE",
-    },
-    {
-      name: "Testes",
-      role: "Cobertura",
-      icon: CheckCircle,
-      agentCategory: "TESTS",
-    },
+    { name: "Acompanhamento", role: "Auditoria de Resolução", icon: CheckCircle2 },
+    { name: "Segurança", role: "OWASP & Secrets", icon: Shield, agentCategory: "SECURITY" },
+    { name: "Performance", role: "Otimização", icon: Zap, agentCategory: "PERFORMANCE" },
+    { name: "Testes", role: "Cobertura", icon: CheckCircle, agentCategory: "TESTS" },
     { name: "Estilo", role: "Clean Code", icon: Code, agentCategory: "STYLE" },
   ];
 
@@ -88,16 +72,32 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   const handleDownloadPdf = async () => {
     try {
       setIsExportingPdf(true);
-      const prData = fullPr || review;
+      toast.info("Processando parecer completo para PDF...");
+      let prData = fullPr;
+      if (!prData && review.dbId) {
+        const res = await fetch(`/api/reviews/${review.dbId}`);
+        if (res.ok) {
+          prData = await res.json();
+          setFullPr(prData);
+        }
+      }
+      prData = prData || review;
       const blob = await pdf(<ReviewPdfDocument pr={prData} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+      a.style.display = "none";
       a.href = url;
-      a.download = `sograi-parecer-completo-PR-${review.pr}.pdf`;
+      a.download = `sograi-parecer-completo-PR-${review.pr || review.id}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 3000);
+      toast.success("Download do PDF iniciado!");
+    } catch (err: any) {
       console.error("Erro ao gerar PDF completo:", err);
+      toast.error(err.message || "Erro ao exportar PDF.");
     } finally {
       setIsExportingPdf(false);
     }
@@ -297,58 +297,35 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
         )}
 
         {selected === "Acompanhamento" && (
-          <DetailTrackingView trackingItems={trackingItems} />
+          <DetailTrackingView
+            trackingItems={trackingItems}
+            onItemResolved={(id, notes) => {
+              if (fullPr?.trackingItems) {
+                setFullPr({
+                  ...fullPr,
+                  trackingItems: fullPr.trackingItems.map((ti: any) =>
+                    ti.id === id
+                      ? {
+                          ...ti,
+                          current_status: "RESOLVED",
+                          resolution_notes: notes || "Resolvido manualmente pelo usuário.",
+                          resolved_at: new Date().toISOString(),
+                        }
+                      : ti
+                  ),
+                });
+              }
+            }}
+          />
         )}
 
         {selected !== "Resumo Executivo" &&
           selected !== "Parecer Completo" &&
           selected !== "Acompanhamento" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Apontamentos Estruturados: {selected}
-                </h3>
-                <span className="text-xs text-slate-500">
-                  {categoryIssues.length} itens identificados
-                </span>
-              </div>
-
-              {categoryIssues.length === 0 ? (
-                <div className="py-10 text-center text-xs text-slate-500 dark:text-slate-400">
-                  Nenhum problema de {selected.toLowerCase()} identificado nos
-                  arquivos desta PR.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {categoryIssues.map((iss, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 text-xs space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200">
-                          {iss.filePath}
-                        </span>
-                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                          {iss.severity}
-                        </span>
-                      </div>
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {iss.title}
-                      </p>
-                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {iss.description}
-                      </p>
-                      {iss.suggestedCode && (
-                        <pre className="p-2 rounded bg-slate-100 dark:bg-slate-950 font-mono text-[10px] overflow-x-auto text-amber-600 dark:text-amber-400">
-                          {iss.suggestedCode}
-                        </pre>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <DetailCategoryIssuesView
+              selected={selected}
+              categoryIssues={categoryIssues}
+            />
           )}
       </div>
     </div>

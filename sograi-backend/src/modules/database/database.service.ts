@@ -269,4 +269,15 @@ export class DatabaseService {
       })),
     };
   }
+
+  async resolveTrackingItem(id: number, notes?: string) {
+    return this.prisma.prTrackingItem.update({
+      where: { id },
+      data: {
+        currentStatus: 'RESOLVED',
+        resolvedAt: new Date(),
+        resolutionNotes: notes || 'Resolvido manualmente pelo usuário.',
+      },
+    });
+  }
 }

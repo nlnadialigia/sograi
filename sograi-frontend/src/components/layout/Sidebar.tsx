@@ -11,6 +11,7 @@ import {
   LogOut,
   BookmarkCheck,
   BookOpen,
+  Activity,
 } from "lucide-react"
 import { Page, UserProfile, ServicesStatus } from "../../types"
 import { navItems } from "../../data/constants"
@@ -21,6 +22,7 @@ interface SidebarProps {
   onNew: () => void
   user: UserProfile
   servicesStatus?: ServicesStatus
+  isAnalyzing?: boolean
   onLogout?: () => void
 }
 
@@ -30,6 +32,7 @@ export function Sidebar({
   onNew,
   user,
   servicesStatus,
+  isAnalyzing,
   onLogout,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
@@ -52,7 +55,11 @@ export function Sidebar({
       }`}
     >
       <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between">
+        <div
+          className={`flex items-center ${
+            collapsed ? "flex-col gap-2.5 justify-center" : "justify-between"
+          }`}
+        >
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black shrink-0 border border-amber-500/20">
               <Sparkles className="w-5 h-5" />
@@ -71,7 +78,7 @@ export function Sidebar({
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
             title={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -108,17 +115,6 @@ export function Sidebar({
             </div>
           </>
         )}
-
-        <button
-          onClick={onNew}
-          className={`mt-3.5 w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:border dark:border-amber-500/40 text-slate-950 dark:text-amber-300 font-bold text-xs transition-all cursor-pointer ${
-            collapsed ? "p-2.5" : "px-4 py-2.5"
-          }`}
-          title="Nova Análise"
-        >
-          <PlusCircle className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Nova Análise</span>}
-        </button>
       </div>
 
       {/* Navegação Principal */}
@@ -135,15 +131,18 @@ export function Sidebar({
 
           let Icon = Clock
           if (item.id === "new") Icon = PlusCircle
+          else if (item.id === "last-analysis") Icon = Activity
           else if (item.id === "pending") Icon = BookmarkCheck
           else if (item.id === "archived") Icon = Archive
           else if (item.id === "guides") Icon = BookOpen
+
+          const isLastAnalysis = item.id === "last-analysis"
 
           return (
             <button
               key={item.id}
               onClick={() => setPage(item.id as Page)}
-              className={`w-full flex items-center gap-3 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              className={`relative w-full flex items-center justify-between rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 collapsed ? "justify-center p-2.5" : "px-3 py-2.5"
               } ${
                 active
@@ -152,8 +151,22 @@ export function Sidebar({
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              <div className="flex items-center gap-3 min-w-0">
+                <Icon className="w-4 h-4 shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </div>
+              {!collapsed && isLastAnalysis && isAnalyzing && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Em andamento</span>
+                </span>
+              )}
+              {collapsed && isLastAnalysis && isAnalyzing && (
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                </span>
+              )}
             </button>
           )
         })}

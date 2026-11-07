@@ -336,6 +336,10 @@ export class ReviewsService {
 
     return this.reportGen.generateSpecCorrecao(prMeta, rejectedFiles, summary as any);
   }
+
+  async resolveTrackingItem(id: number, notes?: string) {
+    return this.dbService.resolveTrackingItem(id, notes);
+  }
 }
 
 

@@ -27,15 +27,24 @@ export interface UnifiedAnalysisResult {
 export class AgentsService {
   constructor(private gemini: GeminiService) {}
 
+  private safeSliceContent(content?: string, maxChars = 100000): string {
+    if (!content) return '(Arquivo novo ou vazio)';
+    if (content.length <= maxChars) return content;
+    const truncated = content.slice(0, maxChars);
+    const lastNewline = truncated.lastIndexOf('\n');
+    const safeCut = lastNewline > 0 ? truncated.slice(0, lastNewline) : truncated;
+    return `${safeCut}\n\n// [... Amostra delimitada em ${maxChars} caracteres - restante preservado para análise ...]`;
+  }
+
   private buildFileDiffPrompt(file: FileDiffData): string {
     return `Arquivo: ${file.filePath}
 Tipo de Alteração: ${file.changeType}
 
 --- CONTEÚDO ORIGINAL ---
-${file.originalContent ? file.originalContent.slice(0, 15000) : '(Arquivo novo ou vazio)'}
+${this.safeSliceContent(file.originalContent)}
 
 --- CONTEÚDO NOVO ---
-${file.newContent ? file.newContent.slice(0, 15000) : '(Arquivo excluído ou vazio)'}
+${this.safeSliceContent(file.newContent)}
 `;
   }
 
@@ -47,14 +56,62 @@ ${file.newContent ? file.newContent.slice(0, 15000) : '(Arquivo excluído ou vaz
       model
     );
 
-    const verdict = parsed.verdict === 'REPROVADO' ? 'REPROVADO' : 'APROVADO';
-    const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
+    const isMigration =
+      file.filePath.toLowerCase().endsWith('migration.sql') ||
+      file.filePath.toLowerCase().includes('/migrations/');
+    const isFrontend = /\.(tsx|jsx)$/i.test(file.filePath);
+    const isBackendService = /\.service\.ts$/i.test(file.filePath);
+    const lineCount = file.newContent ? file.newContent.split('\n').length : 0;
+
+    let verdict: 'APROVADO' | 'REPROVADO' =
+      parsed.verdict === 'REPROVADO' ? 'REPROVADO' : 'APROVADO';
+    let issues = Array.isArray(parsed.issues) ? [...parsed.issues] : [];
+
+    if (isMigration) {
+      verdict = 'APROVADO';
+      issues = issues.map((iss) => ({
+        ...iss,
+        severity: iss.severity === 'BLOCKER' ? 'WARNING' : iss.severity,
+      }));
+    }
+
+    if (isFrontend && lineCount > 350) {
+      verdict = 'REPROVADO';
+      const exists = issues.some((i) => i.title?.toLowerCase().includes('350 linhas'));
+      if (!exists) {
+        issues.unshift({
+          category: 'STYLE',
+          severity: 'BLOCKER',
+          title: `Limite de 350 linhas excedido no Frontend (${lineCount} linhas)`,
+          description: `O arquivo possui ${lineCount} linhas, excedendo o teto arquitetural de 350 linhas para frontend. Decomponha em componentes menores.`,
+          lineReference: `Total: ${lineCount} linhas`,
+        });
+      }
+    }
+
+    if (isBackendService && lineCount > 500) {
+      verdict = 'REPROVADO';
+      const exists = issues.some((i) => i.title?.toLowerCase().includes('500 linhas'));
+      if (!exists) {
+        issues.unshift({
+          category: 'STYLE',
+          severity: 'BLOCKER',
+          title: `Limite de 500 linhas excedido no Serviço Backend (${lineCount} linhas)`,
+          description: `O serviço possui ${lineCount} linhas, excedendo o teto arquitetural de 500 linhas. Extraia responsabilidades respeitando o SRP.`,
+          lineReference: `Total: ${lineCount} linhas`,
+        });
+      }
+    }
 
     return {
       filePath: file.filePath,
       changeType: file.changeType,
       verdict,
-      justification: parsed.justification || (verdict === 'APROVADO' ? 'Arquivo aprovado sem impedimentos.' : 'Arquivo reprovado por pendências técnicas.'),
+      justification:
+        parsed.justification ||
+        (verdict === 'APROVADO'
+          ? 'Arquivo aprovado sem impedimentos.'
+          : 'Arquivo reprovado por pendências técnicas.'),
       style: parsed.styleNotes || 'Nenhum apontamento.',
       security: parsed.securityNotes || 'Nenhum apontamento.',
       performance: parsed.performanceNotes || 'Desempenho satisfatório.',

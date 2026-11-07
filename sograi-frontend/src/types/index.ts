@@ -1,5 +1,6 @@
 export type Page =
   | "new"
+  | "last-analysis"
   | "history"
   | "pending"
   | "archived"

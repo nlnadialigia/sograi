@@ -20,6 +20,7 @@ interface AnalysisConfigModalProps {
     includeTests: boolean
   }) => void
   isSubmitting?: boolean
+  isQueued?: boolean
 }
 
 export function AnalysisConfigModal({
@@ -29,6 +30,7 @@ export function AnalysisConfigModal({
   prMeta,
   onStartAnalysis,
   isSubmitting = false,
+  isQueued = false,
 }: AnalysisConfigModalProps) {
   const [url, setUrl] = useState(initialUrl)
   const [mode, setMode] = useState<"unified" | "separated">("unified")
@@ -242,7 +244,7 @@ export function AnalysisConfigModal({
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Confirmar e Analisar</span>
+                <span>{isQueued ? "Confirmar e Enfileirar" : "Confirmar e Analisar"}</span>
               </>
             )}
           </button>
