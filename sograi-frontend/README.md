@@ -7,16 +7,18 @@
 ## 🎨 Funcionalidades da Interface
 
 - **Dashboard de Pull Requests:** Listagem completa de PRs auditadas com filtros por repositório, autor, status e data.
-- **Explorador Multi-VCS:** Conexão nativa com **Azure DevOps** e **GitHub**, permitindo selecionar projetos, repositórios e PRs abertas em tempo real.
-- **Pipeline de Análise em Tempo Real:** Acompanhamento da auditoria arquivo por arquivo via **Server-Sent Events (SSE)**, com barra de progresso no Topbar e notificações de conclusão.
+- **Explorador Multi-VCS & Fila FIFO:** Conexão nativa com **Azure DevOps** e **GitHub**, permitindo enfileirar múltiplas análises concomitantes sem bloquear a interface.
+- **Pipeline de Análise & Última Análise:** Acompanhamento da auditoria arquivo por arquivo via **Server-Sent Events (SSE)**, indicador pulsante no Topbar e tela dedicada para monitoramento em tempo real.
 - **Parecer Técnico & Executivo:**
   - Visão Executiva com Veredito Geral e Nível de Risco.
   - Comitê de 5 Especialistas (Estilo, Segurança, Desempenho, Testes e Tech Lead).
   - Inspeção detalhada de arquivos com snippets de código, linhas destacadas e sugestões de correção.
-- **Exportação de Relatórios em PDF:** Gerador de relatórios em PDF de alta qualidade com ícones SVG nativos, espelhando fielmente a interface Web.
-- **Gestão de Pendências & Débitos Técnicos:** Painel dedicado para acompanhamento, edição, resolução e exclusão de débitos técnicos vinculados às PRs.
-- **Central de Orientações:** Central interativa de documentação acessível diretamente no menu lateral com 5 guias detalhados.
+- **Exportação de Relatórios em PDF:** Gerador de relatórios em PDF de alta fidelidade com ícones SVG nativos, espelhando fielmente a interface Web com download assíncrono.
+- **Gestão de Pendências Centrada no Arquivo:** Painel modular com cards detalhados (`PendingCard`), exibindo nome do arquivo em destaque, caminho do diretório mono, tags de tipo/prioridade e menu de ações (`⋮`) para marcar como resolvido, editar ou excluir.
+- **Canal de Sugestões & Bugs:** Acesso rápido no Topbar com modal interativo (`SuggestionModal`) para envio de melhorias ou reporte de bugs com abertura automática de issues no GitHub.
+- **Central de Orientações:** Central interativa de documentação acessível diretamente no menu lateral com 5 guias temáticos atualizados.
 - **Painel Administrativo:** Configuração de credenciais de VCS (PATs), modelo de IA e testes de conectividade em tempo real.
+- **Governança de Código:** Estrita conformidade com o limite máximo de **350 linhas por arquivo**, modularização com alta coesão e tipagem rigorosa.
 
 ---
 

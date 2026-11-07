@@ -89,25 +89,35 @@ A aplicação estará disponível em:
 ## 🎯 Principais Recursos
 
 1. **Comitê Multi-Agente de Code Review:**
-   - 🎨 **Style & Clean Code:** Aderência a SOLID, DRY, complexidade ciclomática e boas práticas.
+   - 🎨 **Style & Clean Code:** Aderência a SOLID, DRY, complexidade ciclomática, boas práticas e aprovação determinística de migrações (`migration.sql`).
    - 🔒 **Segurança (AppSec):** Verificação de vulnerabilidades (OWASP), injeções e vazamento de segredos.
    - ⚡ **Desempenho:** Detecção de queries N+1, gargalos de memória e loops ineficientes.
    - 🧪 **Qualidade & Testes:** Avaliação de cobertura e cenários críticos de teste.
-   - 👑 **Tech Lead Sintetizador:** Parecer executivo unificado com veredito e risco da PR.
+   - 👑 **Tech Lead Sintetizador:** Parecer executivo unificado com veredito, risco da PR e governança estrita de linhas (máx 500 no backend e 350 no frontend).
 
-2. **Explorador Multi-VCS:**
+2. **Explorador Multi-VCS & Fila FIFO:**
    - Suporte nativo e simultâneo a **Azure DevOps** e **GitHub**.
    - Descoberta dinâmica de projetos, repositórios e PRs abertas.
+   - **Fila de Execução Concorrente (FIFO):** Permite enfileirar múltiplas análises simultaneamente sem travar a interface.
 
-3. **Acompanhamento em Tempo Real:**
+3. **Acompanhamento em Tempo Real & Última Análise:**
    - Streaming de progresso via **Server-Sent Events (SSE)** direto no navegador.
    - Execução resiliente em segundo plano (Keep-Alive) que não bloqueia a navegação do usuário.
+   - Tela dedicada **"Última Análise"** com progresso arquivo por arquivo e parecer técnico imediato.
 
-4. **Gestão Integrada de Débitos Técnicos:**
-   - Painel para cadastrar, editar e acompanhar pendências manuais e débitos técnicos vinculados às PRs auditadas.
+4. **Gestão de Pendências Centrada no Arquivo:**
+   - Painel reformulado focado no ciclo de vida de cada arquivo do repositório (com suporte a tipos: *Débito Técnico*, *Melhoria* e *Refatoração Futura*).
+   - Menu flutuante de ações (`⋮`) com opções para marcar como resolvido (com notas de resolução), editar e excluir.
+   - Resolução de pendências permitida tanto no painel quanto diretamente na aba de Rastreio do Detalhe do Parecer.
 
-5. **Relatórios em PDF de Alta Resolução:**
+5. **Canal de Sugestões & Reporte de Bugs:**
+   - Integração direta no cabeçalho com abertura instantânea de **Issues no GitHub** (tags `enhancement` e `bug`).
+
+6. **Relatórios em PDF de Alta Resolução:**
    - Exportação profissional com diagramação espelhada à Web, ícones vetoriais nativos e blocos de código com destaque sintático.
+
+7. **Pipeline CI/CD & Auditoria Automatizada:**
+   - Validação contínua no GitHub Actions com Node 20, pnpm, testes do Prisma ORM, checagem automatizada de limites de linhas e builds de frontend e backend.
 
 ---
 

@@ -1,4 +1,4 @@
-import { BookmarkCheck, History, CheckCircle2, AlertOctagon, RotateCw, PlusCircle, Wrench } from "lucide-react"
+import { BookmarkCheck, History, CheckCircle2, AlertOctagon, RotateCw, PlusCircle, Wrench, FileCode, MoreVertical } from "lucide-react"
 
 export function PendingGuideTab() {
   return (
@@ -11,10 +11,10 @@ export function PendingGuideTab() {
           </div>
           <div>
             <h3 className="font-bold text-slate-900 dark:text-white">
-              Gestão de Pendências & Débito Técnico
+              Gestão de Pendências Focada no Arquivo
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Controle absoluto sobre apontamentos automáticos e dívidas técnicas registradas
+              Acompanhamento contínuo da saúde técnica de cada arquivo do seu repositório
             </p>
           </div>
         </div>
@@ -24,20 +24,20 @@ export function PendingGuideTab() {
           <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs">
               <RotateCw className="w-4 h-4 text-blue-500" />
-              <span>1. Rastreamento Automático em Reanálises</span>
+              <span>1. Rastreamento e Resolução Integrada</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              O SogrAI não esquece o que apontou. Quando você reanalisa uma Pull Request após fazer ajustes no código:
+              O SogrAI permite resolver débitos técnicos tanto na tela de gestão quanto diretamente no Parecer:
             </p>
             <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside pl-1">
               <li>
-                <strong className="text-emerald-600 dark:text-emerald-400">Item Resolvido:</strong> Se a vulnerabilidade ou problema foi corrigido, o status passa automaticamente para resolvido.
+                <strong className="text-emerald-600 dark:text-emerald-400">Direto no Detalhe:</strong> Na aba de Rastreamento de Pendências da PR, clique em <em>Resolver</em> para adicionar notas e encerrar o débito.
               </li>
               <li>
-                <strong className="text-rose-600 dark:text-rose-400">Regressão:</strong> Se um defeito corrigido voltar em novos commits, o sistema detecta e emite alerta de regressão.
+                <strong className="text-blue-600 dark:text-blue-400">Menu de Ações (⋮):</strong> No card de pendências, o menu de 3 pontinhos permite marcar como resolvido, editar ou excluir sem poluição visual.
               </li>
               <li>
-                <strong className="text-amber-600 dark:text-amber-400">Histórico de Iterações:</strong> O sistema mantém registrado em qual iteração cada item foi identificado e sanado.
+                <strong className="text-amber-600 dark:text-amber-400">Notas de Resolução:</strong> Toda resolução armazena quem resolveu e as notas explicativas para auditoria futura.
               </li>
             </ul>
           </div>
@@ -46,23 +46,20 @@ export function PendingGuideTab() {
           <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs">
               <Wrench className="w-4 h-4 text-purple-500" />
-              <span>2. Apontamento Manual de Dívida Técnica</span>
+              <span>2. Apontamento por Arquivo</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Nem toda melhoria precisa bloquear a entrega imediata. O time pode acordar dívidas técnicas conscientes:
+              O foco da gestão é na integridade do código e não em PRs temporárias:
             </p>
             <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside pl-1">
               <li>
-                Clique em <strong>+ Nova Pendência Manual</strong> na aba de Pendências.
+                Clique em <strong>+ Adicionar Pendência</strong> e selecione a PR para carregar seus arquivos alterados.
               </li>
               <li>
-                Defina o tipo: <em>Débito Técnico</em>, <em>Melhoria</em> ou <em>Refatoração Futura</em>.
+                Defina o tipo: <span className="font-semibold text-purple-600 dark:text-purple-400">Débito Técnico</span>, <span className="font-semibold text-blue-600 dark:text-blue-400">Melhoria</span> ou <span className="font-semibold text-cyan-600 dark:text-cyan-400">Refatoração Futura</span>.
               </li>
               <li>
-                Informe a prioridade (Baixa, Média, Alta), arquivo afetado e autor responsável.
-              </li>
-              <li>
-                Quando a dívida for quitada em uma sprint posterior, marque como <strong>Resolvida</strong> com notas de resolução.
+                O card exibe o <strong>nome do arquivo em destaque</strong> e o caminho de pastas abaixo, garantindo leitura perfeita mesmo para caminhos longos.
               </li>
             </ul>
           </div>
@@ -76,13 +73,13 @@ export function PendingGuideTab() {
           Status das Pendências no Painel
         </h4>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40">
             <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200/80 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 mb-1.5">
               PENDENTE
             </span>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              O item foi identificado na auditoria ou cadastrado pelo time e ainda requer ação dos desenvolvedores.
+              O débito técnico foi cadastrado para o arquivo e ainda requer ação da equipe de engenharia.
             </p>
           </div>
 
@@ -91,16 +88,7 @@ export function PendingGuideTab() {
               RESOLVIDO
             </span>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              O problema foi corrigido no código e confirmado na reanálise ou finalizado manualmente com documentação.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40">
-            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-200/80 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 mb-1.5">
-              REGRESSÃO
-            </span>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              O problema havia sido solucionado em iterações anteriores, mas foi reintroduzido em alterações recentes da PR.
+              A melhoria foi aplicada no repositório com nota explicativa de resolução documentada.
             </p>
           </div>
         </div>
