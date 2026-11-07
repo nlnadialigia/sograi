@@ -4,7 +4,9 @@ import { PdfFileCard } from "./pdf/PdfFileCard"
 
 const styles = StyleSheet.create({
   page: {
-    padding: 28,
+    paddingTop: 28,
+    paddingHorizontal: 28,
+    paddingBottom: 45,
     fontSize: 8.5,
     fontFamily: "Helvetica",
     color: "#1e293b",
@@ -99,9 +101,10 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 18,
+    top: 805,
     left: 28,
     right: 28,
+    height: 18,
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
     paddingTop: 5,
