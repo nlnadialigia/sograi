@@ -2,6 +2,12 @@
 
 > *"Sempre pronta para achar um defeito naquilo que você fez com carinho."*
 
+[![Swagger OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=flat&logo=swagger&logoColor=black)](http://localhost:3333/api/docs)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/nlnadialigia/sograi/ci.yml?branch=develop&label=CI&logo=github)](https://github.com/nlnadialigia/sograi/actions)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat&logo=nestjs&logoColor=white)](https://nestjs.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
+[![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?style=flat&logo=prisma&logoColor=white)](https://www.prisma.io)
+
 **SogrAI** é uma plataforma inteligente e implacável para auditoria automatizada de Pull Requests no **Azure DevOps** e **GitHub**. Utilizando um comitê multi-agente alimentado por modelos de inteligência artificial de última geração (Google Gemini), a SogrAI avalia cada linha modificada sob a ótica de estilo de código, segurança, desempenho e testes, gerando pareceres técnicos e sínteses executivas acionáveis para o Tech Lead e para o time de engenharia.
 
 ---

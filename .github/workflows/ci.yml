@@ -54,6 +54,10 @@ jobs:
           pnpm exec prisma validate
           pnpm exec prisma generate
 
+      - name: Executar Testes Unitários do Backend
+        working-directory: sograi-backend
+        run: pnpm test
+
       - name: Compilar Backend (NestJS Build)
         working-directory: sograi-backend
         run: pnpm build
@@ -80,6 +84,10 @@ jobs:
       - name: Instalar Dependências do Frontend
         working-directory: sograi-frontend
         run: pnpm install --frozen-lockfile
+
+      - name: Executar Testes Unitários do Frontend
+        working-directory: sograi-frontend
+        run: pnpm test
 
       - name: Compilar Frontend (Vite Build)
         working-directory: sograi-frontend

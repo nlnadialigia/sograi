@@ -2,6 +2,8 @@
 
 > API RESTful em NestJS para auditoria automatizada e implacável de Pull Requests no **Azure DevOps** e **GitHub**, utilizando comitê multi-agente com inteligência artificial generativa (Google Gemini) e persistência relacional com **Prisma ORM** e **PostgreSQL**.
 
+[![Swagger OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=flat&logo=swagger&logoColor=black)](http://localhost:3333/api/docs)
+
 ---
 
 ## 🚀 Tecnologias

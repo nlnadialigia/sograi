@@ -1,0 +1,39 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badges Unit Tests > Snapshots de Badges > deve corresponder ao snapshot estático de badges 1`] = `
+<div>
+  <div
+    class="flex gap-2"
+  >
+    <div
+      class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors border-emerald-200/60 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+    >
+      <span
+        class="w-1.5 h-1.5 rounded-full bg-emerald-500"
+      />
+      <span>
+        Aprovada
+      </span>
+    </div>
+    <div
+      class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors border-emerald-200/60 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+    >
+      <span>
+        Baixo
+      </span>
+    </div>
+    <div
+      class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors border-rose-200/60 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300"
+    >
+      <span>
+        Alta
+      </span>
+    </div>
+    <span
+      class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60"
+    >
+      Débito Técnico
+    </span>
+  </div>
+</div>
+`;
