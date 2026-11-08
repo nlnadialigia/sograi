@@ -30,6 +30,18 @@ export type IssueItem = {
   suggestedCode?: string;
 };
 
+export type PendingHistoryEntry = {
+  id: number;
+  pending_item_id: number;
+  pull_request_id: string;
+  pr_title?: string;
+  author?: string;
+  iteration: number;
+  decision: string;
+  justification?: string;
+  unresolved_at: string;
+};
+
 export type ManualPendingItem = {
   id: number;
   pull_request_id: string;
@@ -41,9 +53,12 @@ export type ManualPendingItem = {
   priority: "LOW" | "MEDIUM" | "HIGH";
   author_name: string;
   status: "PENDING" | "RESOLVED";
+  origin?: "MANUAL" | "AUTOMATIC_ANALYSIS";
+  resolved_by_pr?: string | null;
   resolved_at?: string | null;
   resolution_notes?: string | null;
   created_at: string;
+  history?: PendingHistoryEntry[];
 };
 
 export type TrackingItem = {

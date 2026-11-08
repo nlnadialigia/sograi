@@ -128,14 +128,37 @@ model ManualPendingItem {
   priority        String    @default("MEDIUM") @db.VarChar(20)
   status          String    @default("PENDING") @db.VarChar(20)
   authorName      String?   @default("Tech Lead") @map("author_name") @db.VarChar(100)
+  origin          String    @default("MANUAL") @db.VarChar(50)
+  resolvedByPr    String?   @map("resolved_by_pr") @db.VarChar(50)
   resolutionNotes String?   @map("resolution_notes") @db.Text
   resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz(6)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  history         PendingItemHistory[]
+
   @@index([pullRequestId, repository], map: "idx_manual_pending_pr")
+  @@index([repository, filePath], map: "idx_pending_repo_file")
   @@index([status], map: "idx_manual_pending_status")
   @@map("pr_manual_pending_items")
+}
+
+model PendingItemHistory {
+  id            Int      @id @default(autoincrement())
+  pendingItemId Int      @map("pending_item_id")
+  pullRequestId String   @map("pull_request_id") @db.VarChar(50)
+  prTitle       String?  @map("pr_title") @db.Text
+  author        String?  @db.VarChar(150)
+  iteration     Int      @default(1)
+  decision      String   @default("REPROVADO") @db.VarChar(50)
+  justification String?  @db.Text
+  unresolvedAt  DateTime @default(now()) @map("unresolved_at") @db.Timestamptz(6)
+
+  pendingItem   ManualPendingItem @relation(fields: [pendingItemId], references: [id], onDelete: Cascade)
+
+  @@index([pendingItemId], map: "idx_pending_history_item_id")
+  @@index([pullRequestId], map: "idx_pending_history_pr_id")
+  @@map("pr_pending_item_history")
 }
 
 model SystemSetting {
