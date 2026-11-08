@@ -185,7 +185,36 @@ export class DatabaseService {
       orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
       include: { _count: { select: { fileReviews: true } } },
     });
-    return list.map(mapPullRequestSummary);
+    if (list.length === 0) return [];
+
+    const prIds = list.map((p) => p.pullRequestId);
+    const trackingItems = await this.prisma.prTrackingItem.findMany({
+      where: { pullRequestId: { in: prIds } },
+      select: { pullRequestId: true, repository: true, currentStatus: true },
+    });
+
+    const manualItems = await this.prisma.manualPendingItem.findMany({
+      where: { pullRequestId: { in: prIds }, status: 'PENDING' },
+      select: { pullRequestId: true, repository: true },
+    });
+
+    return list.map((pr) => {
+      const prTracking = trackingItems.filter(
+        (t) => t.pullRequestId === pr.pullRequestId && t.repository === pr.repository
+      );
+      const hasManual = manualItems.some(
+        (m) => m.pullRequestId === pr.pullRequestId && m.repository === pr.repository
+      );
+
+      let hasActivePending = false;
+      if (prTracking.length > 0) {
+        hasActivePending = prTracking.some((t) => t.currentStatus === 'PENDING') || hasManual;
+      } else {
+        hasActivePending = (pr.filesWithIssues > 0) || hasManual;
+      }
+
+      return mapPullRequestSummary(pr, hasActivePending);
+    });
   }
 
   async toggleArchivePullRequest(id: number) {
@@ -224,8 +253,24 @@ export class DatabaseService {
       orderBy: { firstIdentifiedAt: 'asc' },
     });
 
+    const manualPendingCount = await this.prisma.manualPendingItem.count({
+      where: {
+        pullRequestId: pr.pullRequestId,
+        repository: pr.repository || '',
+        status: 'PENDING',
+      },
+    });
+
+    const hasRejectedFiles = pr.fileReviews.some((fr) => fr.decision === 'REPROVADO');
+    let hasActivePending = false;
+    if (trackingItems.length > 0) {
+      hasActivePending = trackingItems.some((ti) => ti.currentStatus === 'PENDING') || manualPendingCount > 0;
+    } else {
+      hasActivePending = (hasRejectedFiles || (pr.filesWithIssues ?? 0) > 0) || manualPendingCount > 0;
+    }
+
     return {
-      ...mapPullRequestSummary(pr),
+      ...mapPullRequestSummary(pr, hasActivePending),
       files: pr.fileReviews.map((fr) => ({
         id: fr.id,
         pr_id: fr.prId,

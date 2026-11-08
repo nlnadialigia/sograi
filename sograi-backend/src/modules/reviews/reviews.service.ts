@@ -309,7 +309,7 @@ export class ReviewsService {
 
   async getSpecCorrecaoMarkdown(id: number): Promise<string | null> {
     const details = await this.dbService.getPullRequestDetails(id);
-    if (!details) return null;
+    if (!details || !details.has_active_pending) return null;
     if (details.spec_markdown) return details.spec_markdown;
 
     const prMeta = {

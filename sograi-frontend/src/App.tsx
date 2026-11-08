@@ -131,6 +131,7 @@ export default function App() {
               executiveSummary: item.executive_summary,
               filesCount: item.total_files_changed,
               filesWithIssues: item.files_with_issues,
+              hasActivePending: !!item.has_active_pending,
               iteration: item.iteration || 1,
               timeToFix: item.time_to_fix,
               recommendation: item.recommendation,
