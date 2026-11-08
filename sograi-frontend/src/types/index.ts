@@ -86,6 +86,7 @@ export type Review = {
   executiveSummary?: string;
   filesCount?: number;
   filesWithIssues?: number;
+  hasActivePending?: boolean;
   iteration?: number;
   timeToFix?: string;
   recommendation?: string;

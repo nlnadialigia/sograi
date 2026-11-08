@@ -102,9 +102,20 @@ export class ReviewsController {
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response
   ) {
+    const details = await this.reviewsService.getReviewById(id);
+    if (!details) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'PR não encontrada para gerar spec.' });
+    }
+
+    if (!details.has_active_pending) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: 'Esta PR não possui pendências ativas para gerar a Spec de Correção.',
+      });
+    }
+
     const markdown = await this.reviewsService.getSpecCorrecaoMarkdown(id);
     if (!markdown) {
-      return res.status(HttpStatus.NOT_FOUND).json({ message: 'PR não encontrada para gerar spec.' });
+      return res.status(HttpStatus.NOT_FOUND).json({ message: 'Falha ao gerar spec da PR.' });
     }
 
     res.setHeader('Content-Type', 'text/markdown; charset=utf-8');

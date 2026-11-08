@@ -48,25 +48,20 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
     if (review.dbId) {
       fetch(`/api/reviews/${review.dbId}`)
         .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data) setFullPr(data);
-        })
+        .then((data) => data && setFullPr(data))
         .catch(() => {});
     }
   }, [review.dbId]);
 
   const formatAuthorName = (fullName: string) => {
     const parts = (fullName || "").trim().split(" ").filter(Boolean);
-    if (parts.length <= 1) return fullName || "Desconhecido";
-    return `${parts[0]} ${parts[parts.length - 1]}`;
+    return parts.length <= 1 ? fullName || "Desconhecido" : `${parts[0]} ${parts[parts.length - 1]}`;
   };
 
   const azureUrl = useMemo(() => {
     const org = review.organization || fullPr?.organization;
     const proj = review.project || fullPr?.project;
-    const repo = review.repository;
-    const prId = review.pr;
-    return `https://dev.azure.com/${org}/${proj}/_git/${repo}/pullrequest/${prId}`;
+    return `https://dev.azure.com/${org}/${proj}/_git/${review.repository}/pullrequest/${review.pr}`;
   }, [review, fullPr]);
 
   const handleDownloadPdf = async () => {
@@ -104,6 +99,10 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   };
 
   const handleDownloadSpec = () => {
+    if (!hasActivePending) {
+      toast.info("Esta PR não possui pendências ativas.");
+      return;
+    }
     if (review.dbId) {
       window.open(`/api/reviews/${review.dbId}/spec`, "_blank");
     }
@@ -130,29 +129,30 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
   }, [activeCategory, fullPr]);
 
   const trackingItems = fullPr?.trackingItems || [];
-  const blockers = useMemo(() => {
-    if (!fullPr?.files) return [];
-    const list: any[] = [];
-    fullPr.files.forEach((f: any) => {
-      (f.issues || []).forEach((iss: any) => {
-        if (iss.severity === "BLOCKER")
-          list.push({ ...iss, filePath: f.file_path });
-      });
-    });
-    return list;
-  }, [fullPr]);
+  const hasActivePending = useMemo(() => {
+    if (fullPr) {
+      if (fullPr.trackingItems && fullPr.trackingItems.length > 0) {
+        return fullPr.trackingItems.some((ti: any) => ti.current_status === "PENDING");
+      }
+      if (fullPr.has_active_pending !== undefined) return fullPr.has_active_pending;
+      return (fullPr.files_with_issues ?? 0) > 0 || (fullPr.files || []).some((f: any) => f.decision === "REPROVADO");
+    }
+    return review.hasActivePending ?? (review.filesWithIssues ?? 0) > 0;
+  }, [fullPr, review]);
 
-  const warnings = useMemo(() => {
-    if (!fullPr?.files) return [];
-    const list: any[] = [];
+  const { blockers, warnings } = useMemo(() => {
+    const b: any[] = [];
+    const w: any[] = [];
+    if (!fullPr?.files) return { blockers: b, warnings: w };
     fullPr.files.forEach((f: any) => {
       (f.issues || []).forEach((iss: any) => {
-        if (iss.severity === "WARNING" || iss.severity === "SUGGESTION") {
-          list.push({ ...iss, filePath: f.file_path });
+        if (iss.severity === "BLOCKER") b.push({ ...iss, filePath: f.file_path });
+        else if (iss.severity === "WARNING" || iss.severity === "SUGGESTION") {
+          w.push({ ...iss, filePath: f.file_path });
         }
       });
     });
-    return list;
+    return { blockers: b, warnings: w };
   }, [fullPr]);
 
   return (
@@ -170,10 +170,25 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
           {!review.isArchived && (
             <button
               onClick={handleDownloadSpec}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Baixar plano de ação Markdown para a IDE"
+              disabled={!hasActivePending}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+                hasActivePending
+                  ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                  : "border-slate-200/50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
+              }`}
+              title={
+                hasActivePending
+                  ? "Baixar plano de ação Markdown para a IDE"
+                  : "Nenhuma pendência ativa nesta PR"
+              }
             >
-              <Wrench className="w-3.5 h-3.5 text-amber-500" />
+              <Wrench
+                className={`w-3.5 h-3.5 ${
+                  hasActivePending
+                    ? "text-amber-500"
+                    : "text-slate-400 dark:text-slate-600"
+                }`}
+              />
               <span>Spec de Correção (.md)</span>
             </button>
           )}
@@ -305,12 +320,7 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
                   ...fullPr,
                   trackingItems: fullPr.trackingItems.map((ti: any) =>
                     ti.id === id
-                      ? {
-                          ...ti,
-                          current_status: "RESOLVED",
-                          resolution_notes: notes || "Resolvido manualmente pelo usuário.",
-                          resolved_at: new Date().toISOString(),
-                        }
+                      ? { ...ti, current_status: "RESOLVED", resolution_notes: notes || "Resolvido manualmente pelo usuário.", resolved_at: new Date().toISOString() }
                       : ti
                   ),
                 });
@@ -319,14 +329,12 @@ export function DetailPage({ review, onBack }: DetailPageProps) {
           />
         )}
 
-        {selected !== "Resumo Executivo" &&
-          selected !== "Parecer Completo" &&
-          selected !== "Acompanhamento" && (
-            <DetailCategoryIssuesView
-              selected={selected}
-              categoryIssues={categoryIssues}
-            />
-          )}
+        {!["Resumo Executivo", "Parecer Completo", "Acompanhamento"].includes(selected) && (
+          <DetailCategoryIssuesView
+            selected={selected}
+            categoryIssues={categoryIssues}
+          />
+        )}
       </div>
     </div>
   );

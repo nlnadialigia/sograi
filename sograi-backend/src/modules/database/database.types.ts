@@ -22,7 +22,12 @@ export interface UpsertPullRequestInput {
   full_markdown?: string;
 }
 
-export function mapPullRequestSummary(pr: any) {
+export function mapPullRequestSummary(pr: any, hasActivePending?: boolean) {
+  const activePending =
+    hasActivePending !== undefined
+      ? hasActivePending
+      : (pr.filesWithIssues ?? 0) > 0;
+
   return {
     id: pr.id,
     pull_request_id: pr.pullRequestId,
@@ -39,6 +44,7 @@ export function mapPullRequestSummary(pr: any) {
     executive_summary: pr.executiveSummary,
     total_files_changed: pr.totalFilesChanged,
     files_with_issues: pr.filesWithIssues,
+    has_active_pending: activePending,
     time_to_fix: pr.timeToFix,
     executive_verdict: pr.executiveVerdict,
     change_summary: pr.changeSummary,
