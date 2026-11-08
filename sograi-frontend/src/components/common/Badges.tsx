@@ -106,3 +106,23 @@ export function ItemTypeBadge({ itemType }: { itemType?: string }) {
   )
 }
 
+export function OriginBadge({ origin }: { origin?: string }) {
+  const isAuto = origin === "AUTOMATIC_ANALYSIS"
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+        isAuto
+          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60"
+          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+      }`}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          isAuto ? "bg-indigo-500" : "bg-slate-400"
+        }`}
+      />
+      <span>{isAuto ? "IA Análise" : "Manual"}</span>
+    </span>
+  )
+}
+

@@ -10,8 +10,12 @@ describe('PendingItemsRepository', () => {
       manualPendingItem: {
         create: jest.fn(),
         findMany: jest.fn(),
+        findFirst: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
+      },
+      pendingItemHistory: {
+        create: jest.fn(),
       },
     };
     repository = new PendingItemsRepository(mockPrisma as PrismaService);
@@ -29,9 +33,11 @@ describe('PendingItemsRepository', () => {
       priority: 'HIGH',
       authorName: 'Tech Lead',
       status: 'PENDING',
+      origin: 'MANUAL',
       resolutionNotes: null,
       resolvedAt: null,
       createdAt: new Date('2026-11-06'),
+      history: [],
     };
     mockPrisma.manualPendingItem.create.mockResolvedValue(fakeCreated);
 
@@ -67,9 +73,11 @@ describe('PendingItemsRepository', () => {
       priority: 'HIGH',
       authorName: 'Tech Lead',
       status: 'RESOLVED',
+      origin: 'MANUAL',
       resolutionNotes: 'Resolvido no commit abc',
       resolvedAt: new Date('2026-11-06'),
       createdAt: new Date('2026-11-06'),
+      history: [],
     };
     mockPrisma.manualPendingItem.update.mockResolvedValue(fakeUpdated);
 
@@ -84,6 +92,130 @@ describe('PendingItemsRepository', () => {
         status: 'RESOLVED',
         resolutionNotes: 'Resolvido no commit abc',
       }),
+      include: expect.any(Object),
+    });
+  });
+
+  describe('syncFromAnalysis (Issue #13)', () => {
+    const prInfo = {
+      prId: '456',
+      title: 'feat: add payment gateway',
+      author: 'dev-user',
+      repository: 'sograi-backend',
+      iteration: 1,
+    };
+
+    it('deve criar pendência automática e registro de histórico se arquivo for REPROVADO sem pendência prévia', async () => {
+      mockPrisma.manualPendingItem.findFirst.mockResolvedValue(null);
+      mockPrisma.manualPendingItem.create.mockResolvedValue({
+        id: 20,
+        pullRequestId: '456',
+        repository: 'sograi-backend',
+        filePath: 'src/payment.ts',
+        title: 'Falta validação de payload',
+        description: 'Não valida dados bancários',
+        itemType: 'TECH_DEBT',
+        priority: 'HIGH',
+        status: 'PENDING',
+        origin: 'AUTOMATIC_ANALYSIS',
+        createdAt: new Date(),
+        history: [],
+      });
+      mockPrisma.pendingItemHistory.create.mockResolvedValue({ id: 1 });
+
+      await repository.syncFromAnalysis(prInfo, [
+        {
+          filePath: 'src/payment.ts',
+          verdict: 'REPROVADO',
+          justification: 'Não valida dados bancários',
+          issues: [{ title: 'Falta validação de payload', severity: 'BLOCKER' }],
+        },
+      ]);
+
+      expect(mockPrisma.manualPendingItem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            filePath: 'src/payment.ts',
+            origin: 'AUTOMATIC_ANALYSIS',
+            priority: 'HIGH',
+          }),
+        })
+      );
+      expect(mockPrisma.pendingItemHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          pendingItemId: 20,
+          pullRequestId: '456',
+          decision: 'REPROVADO',
+        }),
+      });
+    });
+
+    it('deve adicionar nova entrada no histórico se o arquivo já tiver pendência ativa e continuar REPROVADO', async () => {
+      mockPrisma.manualPendingItem.findFirst.mockResolvedValue({
+        id: 20,
+        pullRequestId: '100',
+        repository: 'sograi-backend',
+        filePath: 'src/payment.ts',
+        status: 'PENDING',
+        history: [],
+      });
+      mockPrisma.pendingItemHistory.create.mockResolvedValue({ id: 2 });
+
+      await repository.syncFromAnalysis(prInfo, [
+        {
+          filePath: 'src/payment.ts',
+          verdict: 'REPROVADO',
+          justification: 'Ainda sem testes de unidade',
+        },
+      ]);
+
+      expect(mockPrisma.manualPendingItem.create).not.toHaveBeenCalled();
+      expect(mockPrisma.pendingItemHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          pendingItemId: 20,
+          pullRequestId: '456',
+          prTitle: 'feat: add payment gateway',
+          author: 'dev-user',
+          decision: 'REPROVADO',
+          justification: 'Ainda sem testes de unidade',
+        }),
+      });
+    });
+
+    it('deve resolver a pendência automaticamente se o arquivo citado for APROVADO na nova PR', async () => {
+      mockPrisma.manualPendingItem.findFirst.mockResolvedValue({
+        id: 20,
+        pullRequestId: '100',
+        repository: 'sograi-backend',
+        filePath: 'src/payment.ts',
+        status: 'PENDING',
+        history: [],
+      });
+      mockPrisma.manualPendingItem.update.mockResolvedValue({
+        id: 20,
+        status: 'RESOLVED',
+        resolvedByPr: '456',
+        history: [],
+      });
+
+      await repository.syncFromAnalysis(prInfo, [
+        {
+          filePath: 'src/payment.ts',
+          verdict: 'APROVADO',
+          justification: 'Código refatorado e coberto por testes',
+        },
+      ]);
+
+      expect(mockPrisma.manualPendingItem.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 20 },
+          data: expect.objectContaining({
+            status: 'RESOLVED',
+            resolvedByPr: '456',
+            resolutionNotes: expect.stringContaining('Resolvido automaticamente na análise da PR #456'),
+          }),
+        })
+      );
     });
   });
 });

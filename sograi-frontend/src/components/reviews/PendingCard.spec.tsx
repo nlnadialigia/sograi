@@ -15,6 +15,7 @@ describe("PendingCard Unit Tests", () => {
     priority: "HIGH",
     author_name: "Tech Lead",
     status: "PENDING",
+    origin: "MANUAL",
     created_at: "2026-11-06",
   }
 
@@ -94,5 +95,67 @@ describe("PendingCard Unit Tests", () => {
     )
 
     expect(screen.getByText(/Refatoração concluída no PR #200/)).toBeInTheDocument()
+  })
+
+  it("deve exibir a badge IA Análise para pendências originadas automaticamente", () => {
+    const autoItem: ManualPendingItem = {
+      ...mockItem,
+      origin: "AUTOMATIC_ANALYSIS",
+    }
+
+    render(
+      <PendingCard
+        item={autoItem}
+        onResolve={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("IA Análise")).toBeInTheDocument()
+  })
+
+  it("deve exibir e alternar a visualização do histórico de PRs não resolvidas (Issue #13)", () => {
+    const itemWithHistory: ManualPendingItem = {
+      ...mockItem,
+      history: [
+        {
+          id: 1,
+          pending_item_id: 1,
+          pull_request_id: "101",
+          pr_title: "tentativa 1 de correção",
+          author: "junior-dev",
+          iteration: 1,
+          decision: "REPROVADO",
+          justification: "Ainda falta tipagem estrita",
+          unresolved_at: "2026-11-07T10:00:00Z",
+        },
+      ],
+    }
+
+    render(
+      <PendingCard
+        item={itemWithHistory}
+        onResolve={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    const toggleBtn = screen.getByText(/1 subida de PR não resolveu/i)
+    expect(toggleBtn).toBeInTheDocument()
+
+    // Inicialmente recolhido
+    expect(screen.queryByText(/tentativa 1 de correção/i)).not.toBeInTheDocument()
+
+    // Ao clicar, expande
+    fireEvent.click(toggleBtn)
+    expect(screen.getByText(/tentativa 1 de correção/i)).toBeInTheDocument()
+    expect(screen.getByText(/Ainda falta tipagem estrita/i)).toBeInTheDocument()
+    expect(screen.getByText(/PR #101/i)).toBeInTheDocument()
+
+    // Ao clicar novamente, recolhe
+    fireEvent.click(toggleBtn)
+    expect(screen.queryByText(/tentativa 1 de correção/i)).not.toBeInTheDocument()
   })
 })

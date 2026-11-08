@@ -3,6 +3,7 @@ import { AzureDevOpsService } from '../azure-devops/azure-devops.service';
 import { GitHubService } from '../github/github.service';
 import { AgentsService, UnifiedAnalysisResult } from '../agents/agents.service';
 import { DatabaseService } from '../database/database.service';
+import { PendingItemsRepository } from '../database/pending-items.repository';
 import { GeminiService } from '../gemini/gemini.service';
 import { ReportGeneratorService } from './report-generator.service';
 import { AnalyzePrDto } from './dto/analyze-pr.dto';
@@ -22,7 +23,8 @@ export class ReviewsService {
     private agentsService: AgentsService,
     private dbService: DatabaseService,
     private geminiService: GeminiService,
-    private reportGen: ReportGeneratorService
+    private reportGen: ReportGeneratorService,
+    private pendingRepo: PendingItemsRepository
   ) {
     if (!fs.existsSync(this.resultsDir)) {
       fs.mkdirSync(this.resultsDir, { recursive: true });
@@ -259,6 +261,8 @@ export class ReviewsService {
         }
       }
     }
+
+    await this.pendingRepo.syncFromAnalysis({ ...prMeta, iteration: currentIteration }, fileResults);
 
     notify('Auditoria concluída com sucesso pela SogrAI!', 100);
 

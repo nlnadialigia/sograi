@@ -6,9 +6,12 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
+  History,
+  ChevronDown,
 } from "lucide-react"
 import { ManualPendingItem } from "../../types"
-import { PriorityBadge, ItemTypeBadge } from "../common/Badges"
+import { PriorityBadge, ItemTypeBadge, OriginBadge } from "../common/Badges"
+import { PendingHistoryList } from "./PendingHistoryList"
 
 interface PendingCardProps {
   item: ManualPendingItem
@@ -39,12 +42,14 @@ export function PendingCard({
   onDelete,
 }: PendingCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const isResolved = item.status === "RESOLVED"
   const rawPath = item.file_path || (item as any).filePath || "Arquivo Geral"
   const { fileName, dirPath } = splitFilePath(rawPath)
   const resolutionNotes = item.resolution_notes || (item as any).resolutionNotes
+  const historyList = item.history || []
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -78,6 +83,7 @@ export function PendingCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <OriginBadge origin={item.origin} />
           <ItemTypeBadge itemType={item.item_type || (item as any).itemType} />
           <PriorityBadge priority={item.priority} />
 
@@ -172,6 +178,36 @@ export function PendingCard({
               <span>{resolutionNotes}</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Histórico de Tentativas Não Resolvidas (Issue #13) */}
+      {historyList.length > 0 && (
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <button
+            type="button"
+            onClick={() => setShowHistory((prev) => !prev)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors cursor-pointer"
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>
+              {historyList.length}{" "}
+              {historyList.length === 1
+                ? "subida de PR não resolveu"
+                : "subidas de PR não resolveram"}
+            </span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform ${
+                showHistory ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showHistory && (
+            <div className="mt-2.5">
+              <PendingHistoryList history={historyList} />
+            </div>
+          )}
         </div>
       )}
     </div>
