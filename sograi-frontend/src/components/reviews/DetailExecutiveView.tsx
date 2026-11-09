@@ -1,5 +1,5 @@
 import React from "react"
-import { ShieldAlert, Lightbulb } from "lucide-react"
+import { ShieldAlert, Lightbulb, Check } from "lucide-react"
 
 interface ExecutiveViewProps {
   fullPr: any
@@ -70,13 +70,19 @@ export function DetailExecutiveView({ fullPr, review, blockers, warnings }: Exec
           {warnings.map((s, i) => (
             <div
               key={i}
-              className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 text-xs space-y-1"
+              className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 text-xs space-y-1.5"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-mono text-[11px] font-semibold">
                   {s.filePath}
                 </span>
-                <span className="text-[10px] font-bold text-amber-600 uppercase">{s.category}</span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-semibold border border-amber-500/20">
+                    <Check className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                    <span>Registrado em Pendências</span>
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-600 uppercase">{s.category}</span>
+                </div>
               </div>
               <p className="font-semibold text-amber-900 dark:text-amber-200">{s.title}</p>
               <p className="text-amber-800/90 dark:text-amber-300/90">{s.description}</p>

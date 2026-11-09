@@ -217,5 +217,91 @@ describe('PendingItemsRepository', () => {
         })
       );
     });
+
+    it('deve criar pendência automática de débito técnico quando arquivo for APROVADO com ressalvas/warnings (Issue #18)', async () => {
+      mockPrisma.manualPendingItem.findFirst.mockResolvedValue(null);
+      mockPrisma.manualPendingItem.create.mockResolvedValue({
+        id: 30,
+        pullRequestId: '456',
+        repository: 'sograi-backend',
+        filePath: 'src/logger.ts',
+        title: 'Falta tipagem estrita no logger',
+        description: 'Melhorar tipagem para conformidade',
+        status: 'PENDING',
+        origin: 'AUTOMATIC_ANALYSIS',
+        history: [],
+      });
+
+      await repository.syncFromAnalysis(prInfo, [
+        {
+          filePath: 'src/logger.ts',
+          verdict: 'APROVADO',
+          justification: 'Código aprovado, mas com ressalvas de tipagem.',
+          issues: [
+            {
+              title: 'Falta tipagem estrita no logger',
+              description: 'Melhorar tipagem para conformidade',
+              severity: 'WARNING',
+            },
+          ],
+        },
+      ]);
+
+      expect(mockPrisma.manualPendingItem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            pullRequestId: '456',
+            repository: 'sograi-backend',
+            filePath: 'src/logger.ts',
+            title: 'Falta tipagem estrita no logger',
+            origin: 'AUTOMATIC_ANALYSIS',
+            priority: 'MEDIUM',
+          }),
+        })
+      );
+
+      expect(mockPrisma.pendingItemHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          pendingItemId: 30,
+          pullRequestId: '456',
+          decision: 'APROVADO_COM_RESSALVAS',
+        }),
+      });
+    });
+
+    it('deve adicionar histórico com APROVADO_COM_RESSALVAS se já houver pendência ativa no arquivo', async () => {
+      mockPrisma.manualPendingItem.findFirst.mockResolvedValue({
+        id: 30,
+        pullRequestId: '100',
+        repository: 'sograi-backend',
+        filePath: 'src/logger.ts',
+        status: 'PENDING',
+        history: [],
+      });
+
+      await repository.syncFromAnalysis(prInfo, [
+        {
+          filePath: 'src/logger.ts',
+          verdict: 'APROVADO',
+          justification: 'Código aprovado com avisos.',
+          issues: [
+            {
+              title: 'Aviso de performance',
+              description: 'Otimizar loop',
+              severity: 'WARNING',
+            },
+          ],
+        },
+      ]);
+
+      expect(mockPrisma.manualPendingItem.create).not.toHaveBeenCalled();
+      expect(mockPrisma.pendingItemHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          pendingItemId: 30,
+          pullRequestId: '456',
+          decision: 'APROVADO_COM_RESSALVAS',
+        }),
+      });
+    });
   });
 });
