@@ -231,9 +231,23 @@ export class GitHubService {
         state: res.data.state,
       };
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message;
-      this.logger.error(`Falha ao criar issue no GitHub (${owner}/${repository}): ${msg}`);
-      throw new Error(`Falha ao criar issue no GitHub: ${msg}`);
+      const status = err.response?.status;
+      const rawMsg = err.response?.data?.message || err.message || '';
+      let errorMsg = `Falha ao criar issue no GitHub: ${rawMsg}`;
+
+      if (
+        status === 403 ||
+        rawMsg.toLowerCase().includes('resource not accessible')
+      ) {
+        errorMsg = `O token do GitHub não possui permissão para criar issues em ${owner}/${repository}. Para Fine-Grained PAT, configure a permissão 'Issues: Read and write'. Para Classic PAT, marque o escopo 'repo'.`;
+      } else if (status === 401) {
+        errorMsg = 'Token do GitHub inválido, ausente ou expirado (HTTP 401).';
+      }
+
+      this.logger.error(`Falha ao criar issue no GitHub (${owner}/${repository}): ${errorMsg}`);
+      const customError: any = new Error(errorMsg);
+      customError.status = status || 500;
+      throw customError;
     }
   }
 }

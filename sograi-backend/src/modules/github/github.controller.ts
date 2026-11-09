@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { GitHubService } from './github.service';
 import { DatabaseService } from '../database/database.service';
 
@@ -21,20 +30,25 @@ export class GitHubController {
     }
   ) {
     if (!dto.title?.trim()) {
-      throw new Error('O título da issue é obrigatório.');
+      throw new BadRequestException('O título da issue é obrigatório.');
     }
     if (!dto.body?.trim()) {
-      throw new Error('A descrição da issue é obrigatória.');
+      throw new BadRequestException('A descrição da issue é obrigatória.');
     }
 
     const labels = dto.type === 'bug' ? ['bug'] : ['enhancement'];
-    return this.gitHubService.createIssue({
-      title: dto.title.trim(),
-      body: dto.body.trim(),
-      labels,
-      owner: dto.owner,
-      repository: dto.repository,
-    });
+    try {
+      return await this.gitHubService.createIssue({
+        title: dto.title.trim(),
+        body: dto.body.trim(),
+        labels,
+        owner: dto.owner,
+        repository: dto.repository,
+      });
+    } catch (err: any) {
+      const status = err.status || HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException(err.message || 'Falha ao criar issue no GitHub', status);
+    }
   }
 
   @Get('repositories')

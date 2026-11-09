@@ -39,7 +39,8 @@ const DEFAULT_SETTINGS: Record<string, SettingMeta> = {
   GITHUB_TOKEN: {
     category: "github",
     isSecret: true,
-    description: "Personal Access Token do GitHub (escopos repo / read:org)",
+    description:
+      "Personal Access Token do GitHub (escopo 'repo' para clássico ou 'Issues: Read and write' + 'Pull requests: Read' para Fine-grained)",
     envKey: "GITHUB_TOKEN",
   },
   GITHUB_API_URL: {

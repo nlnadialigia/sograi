@@ -226,6 +226,9 @@ export function ProviderSettingsTab({
               onChange={(e) => onChange("GITHUB_TOKEN", e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
             />
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              💡 <strong>Permissões necessárias:</strong> Para Fine-Grained (<code>github_pat_...</code>), selecione o repositório e conceda <strong>Issues: Read and write</strong> (criação de issues/sugestões), <strong>Pull requests: Read</strong> e <strong>Contents: Read</strong>. Para Classic (<code>ghp_...</code>), marque o escopo <code>repo</code>.
+            </p>
           </div>
 
           <div>
