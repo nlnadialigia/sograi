@@ -277,7 +277,7 @@ export class PendingItemsRepository {
       where: { id },
       data: {
         status: 'RESOLVED',
-        resolutionNotes: notes || null,
+        resolutionNotes: notes?.trim() || 'Resolvido manualmente pelo usuário.',
         resolvedAt: new Date(),
       },
       include: {
