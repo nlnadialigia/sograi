@@ -71,4 +71,38 @@ describe('GitHubService', () => {
       })
     ).rejects.toThrow('Falha ao criar issue no GitHub: Bad credentials');
   });
+
+  it('deve fornecer mensagem amigável instruindo permissões quando erro for 403 / Resource not accessible', async () => {
+    mockedAxios.post.mockRejectedValueOnce({
+      response: {
+        status: 403,
+        data: { message: 'Resource not accessible by personal access token' },
+      },
+    });
+
+    await expect(
+      service.createIssue({
+        title: 'Bug encontrado',
+        body: 'Falha xpto',
+      })
+    ).rejects.toThrow(
+      'O token do GitHub não possui permissão para criar issues em nlnadialigia/sograi. Para Fine-Grained PAT, configure a permissão \'Issues: Read and write\'. Para Classic PAT, marque o escopo \'repo\'.'
+    );
+  });
+
+  it('deve fornecer mensagem clara quando erro for 401 Unauthorized', async () => {
+    mockedAxios.post.mockRejectedValueOnce({
+      response: {
+        status: 401,
+        data: { message: 'Requires authentication' },
+      },
+    });
+
+    await expect(
+      service.createIssue({
+        title: 'Bug',
+        body: 'Desc',
+      })
+    ).rejects.toThrow('Token do GitHub inválido, ausente ou expirado (HTTP 401).');
+  });
 });
