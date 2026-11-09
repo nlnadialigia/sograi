@@ -69,7 +69,7 @@ export function PendingCard({
     <div
       className={`rounded-2xl border p-5 transition-all space-y-3.5 ${
         isResolved
-          ? "bg-slate-50/60 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800 opacity-75"
+          ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300/70 dark:border-emerald-900/50 shadow-xs"
           : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-amber-500/40"
       }`}
     >
@@ -82,7 +82,13 @@ export function PendingCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {isResolved && (
+            <span className="inline-flex items-center gap-1 font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-800">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Resolvido</span>
+            </span>
+          )}
           <OriginBadge origin={item.origin} />
           <ItemTypeBadge itemType={item.item_type || (item as any).itemType} />
           <PriorityBadge priority={item.priority} />
@@ -145,7 +151,13 @@ export function PendingCard({
       {/* Destaque do Arquivo (Estilo Detalhe do Parecer) */}
       <div className="pt-0.5">
         <div className="flex items-start gap-2.5">
-          <div className="p-2 rounded-xl bg-amber-500/10 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+          <div
+            className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+              isResolved
+                ? "bg-emerald-500/15 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/10 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
+            }`}
+          >
             <FileCode className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -169,13 +181,30 @@ export function PendingCard({
       </div>
 
       {/* Resolução (quando resolvido) */}
-      {resolutionNotes && (
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-start gap-2 text-[11px] text-emerald-700 dark:text-emerald-300 font-medium bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-500/20">
-            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
-            <div>
-              <span className="font-bold">Resolução: </span>
-              <span>{resolutionNotes}</span>
+      {isResolved && (
+        <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40">
+          <div className="flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-200 font-medium bg-emerald-100/70 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-300/60 dark:border-emerald-800/60">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="font-bold text-[11px] uppercase tracking-wider text-emerald-950 dark:text-emerald-100">
+                  {item.resolved_by_pr || (item as any).resolvedByPr
+                    ? `Resolvido via PR #${item.resolved_by_pr || (item as any).resolvedByPr}`
+                    : "Resolvido manualmente"}
+                </span>
+                {(item.resolved_at || (item as any).resolvedAt) && (
+                  <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400 font-mono">
+                    {new Date(item.resolved_at || (item as any).resolvedAt).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-emerald-900 dark:text-emerald-100 leading-relaxed break-words">
+                {resolutionNotes || "Resolvido manualmente pelo usuário."}
+              </p>
             </div>
           </div>
         </div>

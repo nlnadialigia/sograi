@@ -85,7 +85,7 @@ describe("PendingCard Unit Tests", () => {
       resolution_notes: "Refatoração concluída no PR #200",
     }
 
-    render(
+    const { container } = render(
       <PendingCard
         item={resolvedItem}
         onResolve={vi.fn()}
@@ -95,6 +95,30 @@ describe("PendingCard Unit Tests", () => {
     )
 
     expect(screen.getByText(/Refatoração concluída no PR #200/)).toBeInTheDocument()
+    expect(screen.getByText("Resolvido")).toBeInTheDocument()
+    expect(screen.getByText("Resolvido manualmente")).toBeInTheDocument()
+    expect(container.firstChild).toHaveClass("bg-emerald-50/50")
+  })
+
+  it("deve exibir identificador da PR quando resolvido automaticamente via PR (Issue #19)", () => {
+    const resolvedViaPrItem: ManualPendingItem = {
+      ...mockItem,
+      status: "RESOLVED",
+      resolved_by_pr: "350",
+      resolution_notes: "Aprovado na iteração 2",
+    }
+
+    render(
+      <PendingCard
+        item={resolvedViaPrItem}
+        onResolve={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Resolvido via PR #350")).toBeInTheDocument()
+    expect(screen.getByText(/Aprovado na iteração 2/)).toBeInTheDocument()
   })
 
   it("deve exibir a badge IA Análise para pendências originadas automaticamente", () => {

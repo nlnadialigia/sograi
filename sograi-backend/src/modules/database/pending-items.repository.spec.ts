@@ -96,6 +96,29 @@ describe('PendingItemsRepository', () => {
     });
   });
 
+  it('deve salvar nota de resolução padrão quando não fornecida (Issue #19)', async () => {
+    mockPrisma.manualPendingItem.update.mockResolvedValue({
+      id: 10,
+      pullRequestId: '123',
+      repository: 'sograi-backend',
+      filePath: 'src/main.ts',
+      status: 'RESOLVED',
+      resolutionNotes: 'Resolvido manualmente pelo usuário.',
+      history: [],
+    });
+
+    await repository.resolve(10);
+
+    expect(mockPrisma.manualPendingItem.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: expect.objectContaining({
+        status: 'RESOLVED',
+        resolutionNotes: 'Resolvido manualmente pelo usuário.',
+      }),
+      include: expect.any(Object),
+    });
+  });
+
   describe('syncFromAnalysis (Issue #13)', () => {
     const prInfo = {
       prId: '456',
