@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { FileCode, CheckCircle, XCircle, BookmarkPlus } from "lucide-react"
+import { FileCode, CheckCircle, XCircle, BookmarkPlus, AlertTriangle } from "lucide-react"
 import { AddPendingModal } from "./AddPendingModal"
 
 interface DetailFullReportViewProps {
@@ -37,6 +37,10 @@ export function DetailFullReportView({ fullPr, review }: DetailFullReportViewPro
         <div className="space-y-6">
           {files.map((file: any) => {
             const isApproved = file.decision === "APROVADO"
+            const fileWarnings = (file.issues || []).filter(
+              (i: any) => i.severity === "WARNING" || i.severity === "SUGGESTION"
+            )
+            const isApprovedWithWarnings = isApproved && fileWarnings.length > 0
             const raw = file.raw_analysis || {}
             const styleText = raw.styleNotes || "Nenhum problema encontrado."
             const securityText = raw.securityNotes || "Nenhum risco de segurança identificado."
@@ -125,37 +129,89 @@ export function DetailFullReportView({ fullPr, review }: DetailFullReportViewPro
                   {/* TechLead Decision */}
                   <div
                     className={`p-3.5 rounded-xl border mt-3 ${
-                      isApproved
-                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300/60 dark:border-emerald-900/40"
-                        : "bg-rose-50/60 dark:bg-rose-950/20 border-rose-300/60 dark:border-rose-900/40"
+                      !isApproved
+                        ? "bg-rose-50/60 dark:bg-rose-950/20 border-rose-300/60 dark:border-rose-900/40"
+                        : isApprovedWithWarnings
+                        ? "bg-amber-50/70 dark:bg-amber-950/25 border-amber-300/70 dark:border-amber-900/50"
+                        : "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300/60 dark:border-emerald-900/40"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      {isApproved ? (
-                        <>
-                          <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                          <span className="font-bold text-emerald-900 dark:text-emerald-200">
-                            TechLead Decision: PR Aprovada
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                          <span className="font-bold text-rose-900 dark:text-rose-200">
-                            TechLead Decision: PR Reprovada
-                          </span>
-                        </>
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        {!isApproved ? (
+                          <>
+                            <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                            <span className="font-bold text-rose-900 dark:text-rose-200">
+                              TechLead Decision: PR Reprovada
+                            </span>
+                          </>
+                        ) : isApprovedWithWarnings ? (
+                          <>
+                            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                            <span className="font-bold text-amber-900 dark:text-amber-200">
+                              TechLead Decision: Aprovado com Ressalvas
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span className="font-bold text-emerald-900 dark:text-emerald-200">
+                              TechLead Decision: PR Aprovada
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {isApprovedWithWarnings && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                          Sincronizado em Pendências
+                        </span>
                       )}
                     </div>
+
                     <p
                       className={`text-xs pl-5 whitespace-pre-wrap leading-relaxed ${
-                        isApproved
-                          ? "text-emerald-800 dark:text-emerald-300"
-                          : "text-rose-800 dark:text-rose-300"
+                        !isApproved
+                          ? "text-rose-800 dark:text-rose-300"
+                          : isApprovedWithWarnings
+                          ? "text-amber-900/90 dark:text-amber-200/90"
+                          : "text-emerald-800 dark:text-emerald-300"
                       }`}
                     >
                       {techLeadText}
                     </p>
+
+                    {isApprovedWithWarnings && (
+                      <div className="mt-3 pt-2.5 border-t border-amber-200/60 dark:border-amber-900/40 space-y-2">
+                        <p className="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1 pl-5">
+                          <span>⚠️ Ressalvas elencadas no Resumo Executivo:</span>
+                        </p>
+                        <div className="space-y-1.5 pl-5">
+                          {fileWarnings.map((w: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-2.5 rounded-lg bg-amber-100/60 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-900/30 text-xs"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-bold text-amber-950 dark:text-amber-100">
+                                  {w.title}
+                                </span>
+                                {w.category && (
+                                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-bold">
+                                    {w.category}
+                                  </span>
+                                )}
+                              </div>
+                              {w.description && (
+                                <p className="text-amber-900/80 dark:text-amber-300/80 text-[11px] mt-1 leading-relaxed">
+                                  {w.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

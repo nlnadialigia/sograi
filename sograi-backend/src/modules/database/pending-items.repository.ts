@@ -214,8 +214,60 @@ export class PendingItemsRepository {
             justification: f.justification,
           });
         }
-      } else if (f.verdict === 'APROVADO' && activePending) {
-        await this.resolveByPr(activePending.id, prInfo.prId, prInfo.author, f.justification);
+      } else if (f.verdict === 'APROVADO') {
+        const warnings = (f.issues || []).filter(
+          (i: any) => i.severity === 'WARNING' || i.severity === 'SUGGESTION'
+        );
+        const hasWarnings = warnings.length > 0;
+
+        if (hasWarnings) {
+          if (activePending) {
+            await this.addHistoryEntry({
+              pendingItemId: activePending.id,
+              prId: prInfo.prId,
+              prTitle: prInfo.title,
+              author: prInfo.author,
+              iteration: prInfo.iteration || 1,
+              decision: 'APROVADO_COM_RESSALVAS',
+              justification:
+                f.justification ||
+                warnings[0]?.description ||
+                'Aprovado com ressalvas / pontos de atenção.',
+            });
+          } else {
+            const mainWarning = warnings[0];
+            const title =
+              mainWarning?.title || `Ressalva técnica em ${f.filePath}`;
+            const description =
+              f.justification ||
+              mainWarning?.description ||
+              'Apontamento de qualidade/ressalva identificado na auditoria.';
+
+            const created = await this.create({
+              prId: prInfo.prId,
+              repository: prInfo.repository,
+              filePath: f.filePath,
+              title,
+              description,
+              itemType: 'TECH_DEBT',
+              priority: 'MEDIUM',
+              authorName: 'SogrAI (Aprovado com Ressalvas)',
+              origin: 'AUTOMATIC_ANALYSIS',
+            });
+
+            await this.addHistoryEntry({
+              pendingItemId: created.id,
+              prId: prInfo.prId,
+              prTitle: prInfo.title,
+              author: prInfo.author,
+              iteration: prInfo.iteration || 1,
+              decision: 'APROVADO_COM_RESSALVAS',
+              justification: f.justification,
+            });
+          }
+        } else if (activePending) {
+          await this.resolveByPr(activePending.id, prInfo.prId, prInfo.author, f.justification);
+        }
       }
     }
   }

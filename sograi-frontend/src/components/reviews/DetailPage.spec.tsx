@@ -85,4 +85,89 @@ describe("DetailPage - Ação Spec de Correção", () => {
       "Baixar plano de ação Markdown para a IDE"
     )
   })
+
+  it("deve exibir 'Aprovado com Ressalvas' e tag de sincronização no Parecer Completo (Issue #18)", async () => {
+    vi.spyOn(global, "fetch").mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: 1,
+            pull_request_id: "100",
+            repository: "meu-repo",
+            files: [
+              {
+                file_path: "src/utils.ts",
+                decision: "APROVADO",
+                justification: "Código aprovado com apontamento de qualidade.",
+                issues: [
+                  {
+                    title: "Uso de console.log",
+                    description: "Remover logs em produção",
+                    severity: "WARNING",
+                    category: "STYLE",
+                  },
+                ],
+              },
+            ],
+          }),
+      } as any)
+    )
+
+    const { fireEvent } = await import("@testing-library/react")
+
+    render(
+      <ToastProvider>
+        <DetailPage review={baseReview} onBack={vi.fn()} />
+      </ToastProvider>
+    )
+
+    // Muda para a aba "Parecer Completo"
+    const parecerTab = screen.getByRole("button", { name: /parecer completo/i })
+    fireEvent.click(parecerTab)
+
+    expect(
+      await screen.findByText(/TechLead Decision: Aprovado com Ressalvas/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Sincronizado em Pendências/i)).toBeInTheDocument()
+    expect(screen.getByText(/Uso de console.log/i)).toBeInTheDocument()
+  })
+
+  it("deve exibir a tag 'Registrado em Pendências' no Resumo Executivo para warnings (Issue #18)", async () => {
+    vi.spyOn(global, "fetch").mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: 1,
+            pull_request_id: "100",
+            repository: "meu-repo",
+            files: [
+              {
+                file_path: "src/utils.ts",
+                decision: "APROVADO",
+                issues: [
+                  {
+                    title: "Uso de console.log",
+                    description: "Remover logs em produção",
+                    severity: "WARNING",
+                    category: "STYLE",
+                  },
+                ],
+              },
+            ],
+          }),
+      } as any)
+    )
+
+    render(
+      <ToastProvider>
+        <DetailPage review={baseReview} onBack={vi.fn()} />
+      </ToastProvider>
+    )
+
+    expect(
+      await screen.findByText(/Registrado em Pendências/i)
+    ).toBeInTheDocument()
+  })
 })
