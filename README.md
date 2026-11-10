@@ -92,6 +92,21 @@ A aplicação estará disponível em:
 
 ---
 
+### Opção C: Modo Standalone Portátil (SQLite 1-Clique — Sem Docker / Sem PostgreSQL)
+
+Ideal para quem quer apenas baixar e rodar no computador com **zero configuração de infraestrutura**:
+
+- **Linux / macOS:**
+  ```bash
+  ./sograi.sh
+  ```
+- **Windows:**
+  Dê um duplo clique em `sograi.bat` (ou execute via terminal).
+
+O script inicializa automaticamente o banco SQLite local em `data/sograi.db`, compila os estáticos se necessário, sobe o servidor unificado na porta `3333` e **abre automaticamente o seu navegador** em `http://localhost:3333`!
+
+---
+
 ## 🎯 Principais Recursos
 
 1. **Comitê Multi-Agente de Code Review:**

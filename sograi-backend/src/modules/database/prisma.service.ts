@@ -8,9 +8,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleInit() {
     try {
       await this.$connect();
-      this.logger.log(' Conectado com sucesso ao PostgreSQL via Prisma ORM!');
+      const isSqlite = (process.env.DATABASE_URL || '').startsWith('file:');
+      this.logger.log(`Conectado com sucesso ao ${isSqlite ? 'SQLite' : 'PostgreSQL'} via Prisma ORM!`);
     } catch (error: any) {
-      this.logger.warn(` Falha ao conectar ao banco via Prisma: ${error?.message || error}`);
+      this.logger.warn(`Falha ao conectar ao banco via Prisma: ${error?.message || error}`);
     }
   }
 
@@ -26,15 +27,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       ]);
       return true;
     } catch (error: any) {
-      this.logger.warn(`Conexão inativa ou timeout no Postgres (${error?.message || error}). Tentando reconectar...`);
+      this.logger.warn(`Conexão inativa ou timeout no banco de dados (${error?.message || error}). Tentando reconectar...`);
       try {
         await this.$disconnect();
         await this.$connect();
         await this.$queryRaw`SELECT 1`;
-        this.logger.log('Reconexão com PostgreSQL restabelecida com sucesso!');
+        this.logger.log('Reconexão com o banco de dados restabelecida com sucesso!');
         return true;
       } catch (reconnectErr: any) {
-        this.logger.error(`Falha ao restabelecer conexão com PostgreSQL: ${reconnectErr?.message || reconnectErr}`);
+        this.logger.error(`Falha ao restabelecer conexão com o banco de dados: ${reconnectErr?.message || reconnectErr}`);
         return false;
       }
     }
