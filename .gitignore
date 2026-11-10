@@ -25,6 +25,11 @@ lerna-debug.log*
 
 # Docker e Banco
 postgres_data/
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 
 # IDE e Sistema Operacional
 .idea/
