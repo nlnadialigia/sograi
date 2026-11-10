@@ -2,15 +2,6 @@ packages:
   - 'sograi-backend'
   - 'sograi-frontend'
 
-allowBuilds:
-  '@google/genai': set this to true or false
-  '@parcel/watcher': set this to true or false
-  '@prisma/client': set this to true or false
-  '@prisma/engines': set this to true or false
-  '@scarf/scarf': set this to true or false
-  prisma: set this to true or false
-  protobufjs: set this to true or false
-
 onlyBuiltDependencies:
   - '@google/genai'
   - '@parcel/watcher'
@@ -19,3 +10,4 @@ onlyBuiltDependencies:
   - '@scarf/scarf'
   - 'prisma'
   - 'protobufjs'
+
