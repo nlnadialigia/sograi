@@ -23,9 +23,20 @@ if "%DATABASE_URL%"=="" (
     set "DATABASE_URL=file:%ROOT_DIR%data\sograi.db"
     echo [OK] Modo Standalone Portatil ativado (SQLite embutido: data\sograi.db)
     
-    node scripts\generate-sqlite-schema.js >nul 2>nul
+    node scripts\generate-sqlite-schema.js
+    if !ERRORLEVEL! neq 0 (
+        echo [ERRO] Falha ao gerar o schema SQLite.
+        pause
+        exit /b 1
+    )
+    
     cd /d "%ROOT_DIR%sograi-backend"
-    call pnpm exec prisma db push --schema=prisma/schema.sqlite.prisma --skip-generate >nul 2>nul
+    call pnpm exec prisma db push --schema=prisma/schema.sqlite.prisma --skip-generate
+    if !ERRORLEVEL! neq 0 (
+        echo [ERRO] Falha ao aplicar o schema no banco de dados SQLite local.
+        pause
+        exit /b 1
+    )
     cd /d "%ROOT_DIR%"
     echo [OK] Banco de dados local SQLite inicializado com sucesso.
 )

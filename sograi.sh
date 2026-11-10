@@ -30,10 +30,17 @@ if [ -z "${DATABASE_URL:-}" ] || [[ "${DATABASE_URL}" == file:* ]]; then
     echo -e "${GREEN}✓ Modo Standalone Portátil ativado (SQLite embutido: data/sograi.db)${NC}"
     
     # Gera o schema SQLite se necessário
-    node scripts/generate-sqlite-schema.js >/dev/null 2>&1
+    if ! node scripts/generate-sqlite-schema.js; then
+        echo -e "❌ Falha ao gerar schema SQLite a partir do schema PostgreSQL."
+        exit 1
+    fi
     
     # Sincroniza as tabelas no SQLite
-    (cd sograi-backend && pnpm exec prisma db push --schema=prisma/schema.sqlite.prisma --skip-generate >/dev/null 2>&1)
+    echo -e "${CYAN}⚙️ Sincronizando schema no banco SQLite...${NC}"
+    if ! (cd sograi-backend && pnpm exec prisma db push --schema=prisma/schema.sqlite.prisma --skip-generate); then
+        echo -e "❌ Falha ao aplicar schema no SQLite via Prisma."
+        exit 1
+    fi
     echo -e "${GREEN}✓ Banco de dados local SQLite inicializado com sucesso.${NC}"
 else
     echo -e "${GREEN}✓ Conectando ao banco configurado em DATABASE_URL${NC}"

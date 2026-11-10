@@ -5,11 +5,18 @@ import { PrismaClient } from '@prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
+  get isSqlite(): boolean {
+    return (process.env.DATABASE_URL || '').startsWith('file:');
+  }
+
+  get databaseType(): string {
+    return this.isSqlite ? 'SQLite' : 'PostgreSQL';
+  }
+
   async onModuleInit() {
     try {
       await this.$connect();
-      const isSqlite = (process.env.DATABASE_URL || '').startsWith('file:');
-      this.logger.log(`Conectado com sucesso ao ${isSqlite ? 'SQLite' : 'PostgreSQL'} via Prisma ORM!`);
+      this.logger.log(`Conectado com sucesso ao ${this.databaseType} via Prisma ORM!`);
     } catch (error: any) {
       this.logger.warn(`Falha ao conectar ao banco via Prisma: ${error?.message || error}`);
     }
